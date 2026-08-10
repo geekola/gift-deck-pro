@@ -102,13 +102,17 @@ export default function BrandDocumentNotifications() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -139,7 +143,7 @@ export default function BrandDocumentNotifications() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
         >
           {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -251,7 +255,7 @@ export default function BrandDocumentNotifications() {
                       borderRadius: 7,
                       padding: "7px 13px",
                       cursor: "pointer",
-                      fontFamily: "'Raleway', sans-serif",
+                      fontFamily: "'Roboto', sans-serif",
                     }}
                   >
                     ↓ {DOC_LABELS[docKey]}

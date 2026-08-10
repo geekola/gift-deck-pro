@@ -147,7 +147,7 @@ export default function OrderStatus() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "24px 16px",
@@ -157,6 +157,10 @@ export default function OrderStatus() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -180,7 +184,7 @@ export default function OrderStatus() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
         >
           {theme === "dark" ? "Light" : "Dark"}
@@ -217,7 +221,7 @@ export default function OrderStatus() {
                   padding: "6px 13px",
                   borderRadius: 7,
                   cursor: "pointer",
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                   background: active ? "rgba(185,129,40,0.12)" : "transparent",
                   color: active ? tokens.gold : t.textSecondary,

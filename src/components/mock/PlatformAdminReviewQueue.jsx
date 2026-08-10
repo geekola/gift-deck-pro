@@ -217,13 +217,17 @@ export default function PlatformAdminReviewQueue() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       {/* Top bar */}
       <div
@@ -262,7 +266,7 @@ export default function PlatformAdminReviewQueue() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
@@ -313,7 +317,7 @@ export default function PlatformAdminReviewQueue() {
                   padding: "7px 13px",
                   borderRadius: 7,
                   cursor: "pointer",
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                   background: active ? "rgba(185,129,40,0.12)" : "transparent",
                   color: active ? tokens.gold : t.textSecondary,
@@ -571,7 +575,7 @@ export default function PlatformAdminReviewQueue() {
                         boxSizing: "border-box",
                         padding: "9px 12px",
                         fontSize: 13,
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                         color: t.textPrimary,
                         background: t.inputBg,
                         border: `1px solid ${noteError ? "#C24747" : t.border}`,
@@ -597,7 +601,7 @@ export default function PlatformAdminReviewQueue() {
                         borderRadius: 7,
                         padding: "7px 14px",
                         cursor: "pointer",
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}
                     >
                       Add note
@@ -619,7 +623,7 @@ export default function PlatformAdminReviewQueue() {
                         border: "none",
                         borderRadius: 8,
                         cursor: "pointer",
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}
                     >
                       Approve
@@ -636,7 +640,7 @@ export default function PlatformAdminReviewQueue() {
                         border: "1px solid rgba(194,71,71,0.4)",
                         borderRadius: 8,
                         cursor: "pointer",
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                       }}
                     >
                       Reject
@@ -660,7 +664,7 @@ export default function PlatformAdminReviewQueue() {
                         boxSizing: "border-box",
                         padding: "10px 12px",
                         fontSize: 13.5,
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                         color: t.textPrimary,
                         background: t.inputBg,
                         border: `1px solid ${
@@ -690,7 +694,7 @@ export default function PlatformAdminReviewQueue() {
                           border: "none",
                           borderRadius: 8,
                           cursor: "pointer",
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                         }}
                       >
                         Confirm rejection
@@ -711,7 +715,7 @@ export default function PlatformAdminReviewQueue() {
                           border: `1px solid ${t.border}`,
                           borderRadius: 8,
                           cursor: "pointer",
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                         }}
                       >
                         Cancel

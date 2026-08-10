@@ -113,7 +113,7 @@ export default function MeasurementProfileSetup() {
     boxSizing: "border-box",
     padding: "9px 12px",
     fontSize: 13.5,
-    fontFamily: "'Raleway', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${t.border}`,
@@ -124,7 +124,7 @@ export default function MeasurementProfileSetup() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 16px",
@@ -134,6 +134,10 @@ export default function MeasurementProfileSetup() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -157,7 +161,7 @@ export default function MeasurementProfileSetup() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
         >
           {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -203,7 +207,7 @@ export default function MeasurementProfileSetup() {
                   color: t.textPrimary,
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}
               >
                 Men's
@@ -220,7 +224,7 @@ export default function MeasurementProfileSetup() {
                   color: t.textPrimary,
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}
               >
                 Women's
@@ -250,7 +254,7 @@ export default function MeasurementProfileSetup() {
                   border: `1px solid ${t.border}`,
                   borderRadius: 6,
                   cursor: "pointer",
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   padding: "6px 12px",
                 }}
               >
@@ -271,7 +275,7 @@ export default function MeasurementProfileSetup() {
                         fontWeight: 500,
                         borderRadius: 6,
                         cursor: "pointer",
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                         border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                         background: active ? "rgba(185,129,40,0.12)" : "transparent",
                         color: active ? tokens.gold : t.textSecondary,
@@ -338,7 +342,7 @@ export default function MeasurementProfileSetup() {
                 padding: "12px 0",
                 fontSize: 14,
                 fontWeight: 500,
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
                 color: "#0F0F0F",
                 background: tokens.gold,
                 border: "none",
@@ -358,7 +362,7 @@ export default function MeasurementProfileSetup() {
                 padding: "11px 0",
                 fontSize: 13,
                 fontWeight: 500,
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
                 color: t.textSecondary,
                 background: "transparent",
                 border: `1px solid ${t.border}`,

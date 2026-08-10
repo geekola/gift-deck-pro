@@ -85,7 +85,7 @@ export default function CustomerSignIn() {
     boxSizing: "border-box",
     padding: "11px 14px",
     fontSize: 14,
-    fontFamily: "'Raleway', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${hasError ? "#C24747" : t.border}`,
@@ -159,7 +159,7 @@ export default function CustomerSignIn() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "32px 16px",
@@ -169,6 +169,10 @@ export default function CustomerSignIn() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -194,7 +198,7 @@ export default function CustomerSignIn() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
@@ -238,7 +242,7 @@ export default function CustomerSignIn() {
                 border: `1px solid ${t.border}`,
                 borderRadius: 8,
                 cursor: "pointer",
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
                 marginBottom: 16,
                 display: "flex",
                 alignItems: "center",
@@ -291,7 +295,7 @@ export default function CustomerSignIn() {
                   padding: "12px 0",
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   color: "#0F0F0F",
                   background: tokens.gold,
                   border: "none",
@@ -345,7 +349,7 @@ export default function CustomerSignIn() {
                 border: `1px solid ${t.border}`,
                 borderRadius: 8,
                 cursor: "pointer",
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
                 marginBottom: 16,
                 display: "flex",
                 alignItems: "center",
@@ -424,7 +428,7 @@ export default function CustomerSignIn() {
                         style={{
                           padding: "7px 12px",
                           fontSize: 12.5,
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                           fontWeight: 500,
                           borderRadius: 7,
                           cursor: "pointer",
@@ -450,7 +454,7 @@ export default function CustomerSignIn() {
                   padding: "12px 0",
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   color: "#0F0F0F",
                   background: tokens.gold,
                   border: "none",
@@ -549,7 +553,7 @@ export default function CustomerSignIn() {
                 borderRadius: 8,
                 padding: "9px 16px",
                 cursor: "pointer",
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}
             >
               Back to start (preview reset)

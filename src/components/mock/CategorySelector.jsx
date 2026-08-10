@@ -48,7 +48,7 @@ export default function CategorySelector() {
     return (
       <div
         style={{
-          fontFamily: "'Raleway', sans-serif",
+          fontFamily: "'Roboto', sans-serif",
           background: t.bgBase,
           minHeight: 640,
           padding: "28px 16px",
@@ -58,6 +58,10 @@ export default function CategorySelector() {
           transition: "background 0.2s ease",
         }}
       >
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+        />
         <div style={{ width: "100%", maxWidth: 400, textAlign: "center", paddingTop: 60 }}>
           <div
             style={{
@@ -86,7 +90,7 @@ export default function CategorySelector() {
               borderRadius: 8,
               padding: "9px 16px",
               cursor: "pointer",
-              fontFamily: "'Raleway', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}
           >
             ← Back to categories
@@ -99,7 +103,7 @@ export default function CategorySelector() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 16px",
@@ -109,6 +113,10 @@ export default function CategorySelector() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -132,7 +140,7 @@ export default function CategorySelector() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
         >
           {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -212,7 +220,7 @@ export default function CategorySelector() {
             padding: "13px 0",
             fontSize: 14.5,
             fontWeight: 500,
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
             color: selected ? "#0F0F0F" : t.textSecondary,
             background: selected ? tokens.gold : t.surfaceRaised,
             border: selected ? "none" : `1px solid ${t.border}`,

@@ -276,7 +276,7 @@ export default function ReviewAndSubmit() {
     return (
       <div
         style={{
-          fontFamily: "'Raleway', sans-serif",
+          fontFamily: "'Roboto', sans-serif",
           background: t.bgBase,
           minHeight: 640,
           padding: "28px 16px",
@@ -285,6 +285,10 @@ export default function ReviewAndSubmit() {
           alignItems: "center",
         }}
       >
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+        />
         <div style={{ width: "100%", maxWidth: 420 }}>
           <div
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 14 }}
@@ -387,7 +391,7 @@ export default function ReviewAndSubmit() {
               border: `1px solid ${t.border}`,
               borderRadius: 8,
               cursor: "pointer",
-              fontFamily: "'Raleway', sans-serif",
+              fontFamily: "'Roboto', sans-serif",
             }}
           >
             Back to start (preview reset)
@@ -400,7 +404,7 @@ export default function ReviewAndSubmit() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "24px 16px 110px 16px",
@@ -411,6 +415,10 @@ export default function ReviewAndSubmit() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       <div
         style={{
@@ -434,7 +442,7 @@ export default function ReviewAndSubmit() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
         >
           {theme === "dark" ? "Light" : "Dark"}
@@ -573,7 +581,7 @@ export default function ReviewAndSubmit() {
                               padding: "6px 12px",
                               borderRadius: 7,
                               cursor: disabled ? "not-allowed" : "pointer",
-                              fontFamily: "'Raleway', sans-serif",
+                              fontFamily: "'Roboto', sans-serif",
                               border: selected ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                               background: selected ? "rgba(185,129,40,0.14)" : "transparent",
                               color: disabled ? t.textSecondary : selected ? tokens.gold : t.textPrimary,
@@ -656,7 +664,7 @@ export default function ReviewAndSubmit() {
                           borderRadius: 6,
                           padding: "5px 10px",
                           cursor: "pointer",
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                           whiteSpace: "nowrap",
                           flexShrink: 0,
                           marginLeft: 10,
@@ -677,7 +685,7 @@ export default function ReviewAndSubmit() {
                         borderRadius: 7,
                         padding: "7px 12px",
                         cursor: "pointer",
-                        fontFamily: "'Raleway', sans-serif",
+                        fontFamily: "'Roboto', sans-serif",
                         marginTop: 6,
                       }}
                     >
@@ -730,7 +738,7 @@ export default function ReviewAndSubmit() {
                               background: "transparent",
                               border: "none",
                               cursor: "pointer",
-                              fontFamily: "'Raleway', sans-serif",
+                              fontFamily: "'Roboto', sans-serif",
                               padding: "4px 6px",
                             }}
                           >
@@ -749,7 +757,7 @@ export default function ReviewAndSubmit() {
                           borderRadius: 7,
                           padding: "7px 12px",
                           cursor: "pointer",
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                           marginTop: 6,
                           width: "100%",
                         }}
@@ -817,7 +825,7 @@ export default function ReviewAndSubmit() {
                 borderRadius: 8,
                 padding: "9px 18px",
                 cursor: allSizesChosen && allAddressesConfirmed ? "pointer" : "not-allowed",
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}
             >
               Submit
@@ -877,7 +885,7 @@ export default function ReviewAndSubmit() {
                   boxSizing: "border-box",
                   padding: "9px 12px",
                   fontSize: 13,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   color: t.textPrimary,
                   background: t.surfaceRaised,
                   border: `1px solid ${t.border}`,
@@ -901,7 +909,7 @@ export default function ReviewAndSubmit() {
                   border: "none",
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}
               >
                 Save
@@ -918,7 +926,7 @@ export default function ReviewAndSubmit() {
                   border: `1px solid ${t.border}`,
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                 }}
               >
                 Cancel
@@ -946,7 +954,7 @@ export default function ReviewAndSubmit() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "'Raleway', sans-serif",
+                    fontFamily: "'Roboto', sans-serif",
                   }}
                 >
                   Make default
@@ -962,7 +970,7 @@ export default function ReviewAndSubmit() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "'Raleway', sans-serif",
+                    fontFamily: "'Roboto', sans-serif",
                   }}
                 >
                   Delete address

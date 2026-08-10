@@ -149,7 +149,7 @@ export default function BrandPortalAuthFlow() {
     boxSizing: "border-box",
     padding: "11px 14px",
     fontSize: 14,
-    fontFamily: "'Raleway', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     fontWeight: 400,
     color: t.textPrimary,
     background: t.inputBg,
@@ -163,7 +163,7 @@ export default function BrandPortalAuthFlow() {
   const labelStyle = {
     display: "block",
     fontSize: 13,
-    fontFamily: "'Raleway', sans-serif",
+    fontFamily: "'Roboto', sans-serif",
     fontWeight: 500,
     color: t.textSecondary,
     marginBottom: 6,
@@ -173,7 +173,7 @@ export default function BrandPortalAuthFlow() {
   return (
     <div
       style={{
-        fontFamily: "'Raleway', sans-serif",
+        fontFamily: "'Roboto', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "32px 16px",
@@ -183,6 +183,10 @@ export default function BrandPortalAuthFlow() {
         transition: "background 0.2s ease",
       }}
     >
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      />
 
       {/* Top bar: wordmark + theme toggle note */}
       <div
@@ -228,7 +232,7 @@ export default function BrandPortalAuthFlow() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Raleway', sans-serif",
+            fontFamily: "'Roboto', sans-serif",
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
@@ -343,7 +347,7 @@ export default function BrandPortalAuthFlow() {
                         style={{
                           padding: "8px 14px",
                           fontSize: 13,
-                          fontFamily: "'Raleway', sans-serif",
+                          fontFamily: "'Roboto', sans-serif",
                           fontWeight: 500,
                           borderRadius: 7,
                           cursor: "pointer",
@@ -375,7 +379,7 @@ export default function BrandPortalAuthFlow() {
                   padding: "12px 0",
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   color: "#0F0F0F",
                   background: tokens.gold,
                   border: "none",
@@ -479,7 +483,7 @@ export default function BrandPortalAuthFlow() {
                 borderRadius: 8,
                 padding: "9px 16px",
                 cursor: "pointer",
-                fontFamily: "'Raleway', sans-serif",
+                fontFamily: "'Roboto', sans-serif",
               }}
             >
               Back to start (preview reset)
@@ -534,7 +538,7 @@ export default function BrandPortalAuthFlow() {
                     boxSizing: "border-box",
                     padding: "11px 14px",
                     fontSize: 14,
-                    fontFamily: "'Raleway', sans-serif",
+                    fontFamily: "'Roboto', sans-serif",
                     color: t.textPrimary,
                     background: t.inputBg,
                     border: `1px solid ${t.border}`,
@@ -555,7 +559,7 @@ export default function BrandPortalAuthFlow() {
                     boxSizing: "border-box",
                     padding: "11px 14px",
                     fontSize: 14,
-                    fontFamily: "'Raleway', sans-serif",
+                    fontFamily: "'Roboto', sans-serif",
                     color: t.textPrimary,
                     background: t.inputBg,
                     border: `1px solid ${t.border}`,
@@ -578,7 +582,7 @@ export default function BrandPortalAuthFlow() {
                   padding: "12px 0",
                   fontSize: 14,
                   fontWeight: 500,
-                  fontFamily: "'Raleway', sans-serif",
+                  fontFamily: "'Roboto', sans-serif",
                   color: "#0F0F0F",
                   background: tokens.gold,
                   border: "none",
