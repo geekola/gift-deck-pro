@@ -133,17 +133,13 @@ export default function ProductCatalogue() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       {/* Top bar */}
       <div
@@ -182,7 +178,7 @@ export default function ProductCatalogue() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
@@ -228,7 +224,7 @@ export default function ProductCatalogue() {
               borderRadius: 8,
               padding: "10px 16px",
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
               whiteSpace: "nowrap",
             }}
           >
@@ -255,7 +251,7 @@ export default function ProductCatalogue() {
                   padding: "7px 13px",
                   borderRadius: 7,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                   background: active ? "rgba(185,129,40,0.12)" : "transparent",
                   color: active ? tokens.gold : t.textSecondary,

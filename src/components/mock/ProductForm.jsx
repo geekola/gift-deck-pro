@@ -177,7 +177,7 @@ export default function ProductForm() {
     boxSizing: "border-box",
     padding: "10px 12px",
     fontSize: 13.5,
-    fontFamily: "'Roboto', sans-serif",
+    fontFamily: "'Raleway', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${hasError ? "#C24747" : t.border}`,
@@ -199,7 +199,7 @@ export default function ProductForm() {
     return (
       <div
         style={{
-          fontFamily: "'Roboto', sans-serif",
+          fontFamily: "'Raleway', sans-serif",
           background: t.bgBase,
           minHeight: 640,
           padding: "32px 16px",
@@ -208,10 +208,6 @@ export default function ProductForm() {
           justifyContent: "center",
         }}
       >
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-        />
         <div
           style={{
             background: t.surface,
@@ -248,7 +244,7 @@ export default function ProductForm() {
               borderRadius: 8,
               padding: "10px 18px",
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
           >
             Back to form
@@ -261,17 +257,13 @@ export default function ProductForm() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       {/* Top bar */}
       <div
@@ -311,7 +303,7 @@ export default function ProductForm() {
               borderRadius: 6,
               padding: "5px 10px",
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
             title="Preview-only toggle — simulates this brand having ERP stock sync enabled"
           >
@@ -328,7 +320,7 @@ export default function ProductForm() {
               borderRadius: 6,
               padding: "5px 10px",
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
           >
             {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -416,7 +408,7 @@ export default function ProductForm() {
                       style={{
                         padding: "8px 14px",
                         fontSize: 13,
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         fontWeight: 500,
                         borderRadius: 7,
                         cursor: "pointer",
@@ -470,7 +462,7 @@ export default function ProductForm() {
                         flex: 1,
                         padding: "9px 0",
                         fontSize: 13,
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         fontWeight: 500,
                         borderRadius: 7,
                         cursor: "pointer",
@@ -887,7 +879,7 @@ export default function ProductForm() {
                 borderRadius: 7,
                 padding: "7px 14px",
                 cursor: "pointer",
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
                 marginTop: 4,
               }}
             >
@@ -902,7 +894,7 @@ export default function ProductForm() {
               padding: "13px 0",
               fontSize: 14.5,
               fontWeight: 500,
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
               color: "#0F0F0F",
               background: tokens.gold,
               border: "none",

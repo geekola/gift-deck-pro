@@ -257,7 +257,7 @@ export default function SwipeDeck() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "24px 16px",
@@ -269,10 +269,6 @@ export default function SwipeDeck() {
         overflow: "hidden",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div
         style={{
@@ -309,7 +305,7 @@ export default function SwipeDeck() {
               borderRadius: 6,
               padding: "5px 10px",
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
           >
             {theme === "dark" ? "Light" : "Dark"}
@@ -337,7 +333,7 @@ export default function SwipeDeck() {
             boxSizing: "border-box",
             fontSize: 13,
             fontWeight: 500,
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
             color: tokens.gold,
             background: t.surface,
             border: `1px solid ${tokens.gold}`,
@@ -643,7 +639,7 @@ export default function SwipeDeck() {
               fontSize: 17,
               cursor: history.length === 0 ? "not-allowed" : "pointer",
               opacity: history.length === 0 ? 0.4 : 1,
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
             aria-label="Undo"
             title="Undo last action"

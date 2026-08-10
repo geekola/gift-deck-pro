@@ -279,7 +279,7 @@ export default function CustomerSettings() {
     boxSizing: "border-box",
     padding: "9px 12px",
     fontSize: 13.5,
-    fontFamily: "'Roboto', sans-serif",
+    fontFamily: "'Raleway', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${t.border}`,
@@ -290,7 +290,7 @@ export default function CustomerSettings() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "24px 16px",
@@ -300,10 +300,6 @@ export default function CustomerSettings() {
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div style={{ width: "100%", maxWidth: 440 }}>
         <div
@@ -340,7 +336,7 @@ export default function CustomerSettings() {
                   padding: "7px 14px",
                   borderRadius: 7,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                   background: active ? "rgba(185,129,40,0.12)" : "transparent",
                   color: active ? tokens.gold : t.textSecondary,
@@ -382,7 +378,7 @@ export default function CustomerSettings() {
                       fontWeight: 500,
                       borderRadius: 8,
                       cursor: "pointer",
-                      fontFamily: "'Roboto', sans-serif",
+                      fontFamily: "'Raleway', sans-serif",
                       border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                       background: active ? "rgba(185,129,40,0.12)" : "transparent",
                       color: active ? tokens.gold : t.textPrimary,
@@ -450,7 +446,7 @@ export default function CustomerSettings() {
                           borderRadius: 6,
                           padding: "5px 10px",
                           cursor: "pointer",
-                          fontFamily: "'Roboto', sans-serif",
+                          fontFamily: "'Raleway', sans-serif",
                           flexShrink: 0,
                           marginLeft: 10,
                         }}
@@ -507,7 +503,7 @@ export default function CustomerSettings() {
                 border: `1px solid ${tokens.gold}`,
                 borderRadius: 8,
                 cursor: "pointer",
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
               }}
             >
               + Add new address
@@ -585,7 +581,7 @@ export default function CustomerSettings() {
                         borderRadius: 6,
                         padding: "5px 10px",
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         flexShrink: 0,
                         marginLeft: 10,
                       }}
@@ -626,7 +622,7 @@ export default function CustomerSettings() {
                 border: `1px solid ${tokens.gold}`,
                 borderRadius: 8,
                 cursor: "pointer",
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
               }}
             >
               + Add contact
@@ -658,7 +654,7 @@ export default function CustomerSettings() {
                         padding: "6px 13px",
                         borderRadius: 7,
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                         background: active ? "rgba(185,129,40,0.12)" : "transparent",
                         color: active ? tokens.gold : t.textPrimary,
@@ -682,7 +678,7 @@ export default function CustomerSettings() {
                         fontWeight: 500,
                         borderRadius: 6,
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                         background: active ? "rgba(185,129,40,0.12)" : "transparent",
                         color: active ? tokens.gold : t.textSecondary,
@@ -741,7 +737,7 @@ export default function CustomerSettings() {
                 border: "none",
                 borderRadius: 8,
                 cursor: "pointer",
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
               }}
             >
               Save measurements
@@ -822,7 +818,7 @@ export default function CustomerSettings() {
                   boxSizing: "border-box",
                   padding: "9px 12px",
                   fontSize: 13,
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   color: t.textPrimary,
                   background: t.surfaceRaised,
                   border: `1px solid ${t.border}`,
@@ -846,7 +842,7 @@ export default function CustomerSettings() {
                   border: "none",
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                 }}
               >
                 Save
@@ -863,7 +859,7 @@ export default function CustomerSettings() {
                   border: `1px solid ${t.border}`,
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                 }}
               >
                 Cancel
@@ -891,7 +887,7 @@ export default function CustomerSettings() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "'Roboto', sans-serif",
+                    fontFamily: "'Raleway', sans-serif",
                   }}
                 >
                   Make default
@@ -907,7 +903,7 @@ export default function CustomerSettings() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "'Roboto', sans-serif",
+                    fontFamily: "'Raleway', sans-serif",
                   }}
                 >
                   Delete address
@@ -965,7 +961,7 @@ export default function CustomerSettings() {
                       padding: "6px 12px",
                       borderRadius: 7,
                       cursor: "pointer",
-                      fontFamily: "'Roboto', sans-serif",
+                      fontFamily: "'Raleway', sans-serif",
                       border: selected ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                       background: selected ? "rgba(185,129,40,0.12)" : "transparent",
                       color: selected ? tokens.gold : t.textPrimary,
@@ -988,7 +984,7 @@ export default function CustomerSettings() {
                   boxSizing: "border-box",
                   padding: "9px 12px",
                   fontSize: 13,
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   color: t.textPrimary,
                   background: t.surfaceRaised,
                   border: `1px solid ${t.border}`,
@@ -1007,7 +1003,7 @@ export default function CustomerSettings() {
                   boxSizing: "border-box",
                   padding: "9px 12px",
                   fontSize: 13,
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   color: t.textPrimary,
                   background: t.surfaceRaised,
                   border: `1px solid ${t.border}`,
@@ -1028,7 +1024,7 @@ export default function CustomerSettings() {
                 boxSizing: "border-box",
                 padding: "9px 12px",
                 fontSize: 13,
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
                 color: t.textPrimary,
                 background: t.surfaceRaised,
                 border: `1px solid ${t.border}`,
@@ -1047,7 +1043,7 @@ export default function CustomerSettings() {
                 boxSizing: "border-box",
                 padding: "9px 12px",
                 fontSize: 13,
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
                 color: t.textPrimary,
                 background: t.surfaceRaised,
                 border: `1px solid ${t.border}`,
@@ -1160,7 +1156,7 @@ export default function CustomerSettings() {
                   border: "none",
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                 }}
               >
                 Save
@@ -1177,7 +1173,7 @@ export default function CustomerSettings() {
                   border: `1px solid ${t.border}`,
                   borderRadius: 8,
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                 }}
               >
                 Cancel
@@ -1198,7 +1194,7 @@ export default function CustomerSettings() {
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   padding: "6px 0",
                 }}
               >

@@ -171,7 +171,7 @@ export default function SavedGallery() {
     return (
       <div
         style={{
-          fontFamily: "'Roboto', sans-serif",
+          fontFamily: "'Raleway', sans-serif",
           background: t.bgBase,
           minHeight: 640,
           padding: "28px 16px",
@@ -180,10 +180,6 @@ export default function SavedGallery() {
           alignItems: "center",
         }}
       >
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-        />
         <div style={{ width: "100%", maxWidth: 400, paddingTop: 40 }}>
           <div
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 14 }}
@@ -231,7 +227,7 @@ export default function SavedGallery() {
               border: `1px solid ${t.border}`,
               borderRadius: 8,
               cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
             }}
           >
             ← Back to saved
@@ -244,7 +240,7 @@ export default function SavedGallery() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "24px 16px 100px 16px",
@@ -255,10 +251,6 @@ export default function SavedGallery() {
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div
         style={{
@@ -282,7 +274,7 @@ export default function SavedGallery() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
         >
           {theme === "dark" ? "Light" : "Dark"}
@@ -348,7 +340,7 @@ export default function SavedGallery() {
                     background: "transparent",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "'Roboto', sans-serif",
+                    fontFamily: "'Raleway', sans-serif",
                     padding: 0,
                   }}
                 >
@@ -463,7 +455,7 @@ export default function SavedGallery() {
                               borderRadius: 5,
                               padding: "5px 8px",
                               cursor: "pointer",
-                              fontFamily: "'Roboto', sans-serif",
+                              fontFamily: "'Raleway', sans-serif",
                             }}
                           >
                             Remove
@@ -479,7 +471,7 @@ export default function SavedGallery() {
                               borderRadius: 5,
                               padding: "5px 8px",
                               cursor: "pointer",
-                              fontFamily: "'Roboto', sans-serif",
+                              fontFamily: "'Raleway', sans-serif",
                             }}
                           >
                             Cancel
@@ -553,7 +545,7 @@ export default function SavedGallery() {
                 borderRadius: 8,
                 padding: "9px 16px",
                 cursor: "pointer",
-                fontFamily: "'Roboto', sans-serif",
+                fontFamily: "'Raleway', sans-serif",
               }}
             >
               Move to Review & Submit

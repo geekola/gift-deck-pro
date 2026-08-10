@@ -181,7 +181,7 @@ export default function CustomerAccessManager() {
     boxSizing: "border-box",
     padding: "9px 12px",
     fontSize: 13.5,
-    fontFamily: "'Roboto', sans-serif",
+    fontFamily: "'Raleway', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${hasError ? "#C24747" : t.border}`,
@@ -216,17 +216,13 @@ export default function CustomerAccessManager() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       {/* Top bar */}
       <div
@@ -265,7 +261,7 @@ export default function CustomerAccessManager() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
         >
           {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -327,7 +323,7 @@ export default function CustomerAccessManager() {
                     padding: "10px 12px",
                     borderRadius: 8,
                     cursor: "pointer",
-                    fontFamily: "'Roboto', sans-serif",
+                    fontFamily: "'Raleway', sans-serif",
                     border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                     background: active ? "rgba(185,129,40,0.1)" : "transparent",
                   }}
@@ -392,7 +388,7 @@ export default function CustomerAccessManager() {
                     padding: "7px 13px",
                     borderRadius: 7,
                     cursor: "pointer",
-                    fontFamily: "'Roboto', sans-serif",
+                    fontFamily: "'Raleway', sans-serif",
                     border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
                     background: active ? "rgba(185,129,40,0.12)" : "transparent",
                     color: active ? tokens.gold : t.textSecondary,
@@ -409,7 +405,7 @@ export default function CustomerAccessManager() {
             onChange={(e) => setIndustryFilter(e.target.value)}
             style={{
               fontSize: 12.5,
-              fontFamily: "'Roboto', sans-serif",
+              fontFamily: "'Raleway', sans-serif",
               color: t.textPrimary,
               background: t.inputBg,
               border: `1px solid ${t.border}`,
@@ -547,7 +543,7 @@ export default function CustomerAccessManager() {
                         border: "none",
                         borderRadius: 8,
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                       }}
                     >
                       Approve
@@ -564,7 +560,7 @@ export default function CustomerAccessManager() {
                         border: "1px solid rgba(194,71,71,0.4)",
                         borderRadius: 8,
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                       }}
                     >
                       Deny
@@ -682,7 +678,7 @@ export default function CustomerAccessManager() {
                             borderRadius: 7,
                             padding: "6px 12px",
                             cursor: "pointer",
-                            fontFamily: "'Roboto', sans-serif",
+                            fontFamily: "'Raleway', sans-serif",
                           }}
                         >
                           {selected.allowance ? "Edit" : "Set allowance"}
@@ -821,7 +817,7 @@ export default function CustomerAccessManager() {
                               border: "none",
                               borderRadius: 8,
                               cursor: "pointer",
-                              fontFamily: "'Roboto', sans-serif",
+                              fontFamily: "'Raleway', sans-serif",
                             }}
                           >
                             Save allowance
@@ -841,7 +837,7 @@ export default function CustomerAccessManager() {
                               border: `1px solid ${t.border}`,
                               borderRadius: 8,
                               cursor: "pointer",
-                              fontFamily: "'Roboto', sans-serif",
+                              fontFamily: "'Raleway', sans-serif",
                             }}
                           >
                             Cancel

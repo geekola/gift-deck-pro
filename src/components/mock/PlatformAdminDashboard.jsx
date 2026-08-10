@@ -260,7 +260,7 @@ function ReviewQueueSection({ t }) {
         {[{ key: "pending", label: "Pending" }, { key: "approved", label: "Approved" }, { key: "rejected", label: "Rejected" }, { key: "all", label: "All" }].map((f) => {
           const active = filter === f.key;
           return (
-            <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 13px", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: active ? "rgba(185,129,40,0.12)" : "transparent", color: active ? tokens.gold : t.textSecondary }}>
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 13px", borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif", border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: active ? "rgba(185,129,40,0.12)" : "transparent", color: active ? tokens.gold : t.textSecondary }}>
               {f.label}
             </button>
           );
@@ -330,16 +330,16 @@ function ReviewQueueSection({ t }) {
                     </div>
                   )}
                   <textarea value={newNote} onChange={(e) => { setNewNote(e.target.value); if (noteError) setNoteError(""); }} placeholder="e.g. Brand emailed requesting reconsideration..." rows={2}
-                    style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${noteError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
+                    style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13, fontFamily: "'Raleway', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${noteError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
                   {noteError && <p style={{ fontSize: 12, color: "#E27A7A", margin: "0 0 8px 0" }}>{noteError}</p>}
-                  <button onClick={handleAddNote} style={{ fontSize: 12.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 7, padding: "7px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Add note</button>
+                  <button onClick={handleAddNote} style={{ fontSize: 12.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 7, padding: "7px 14px", cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Add note</button>
                 </div>
               )}
 
               {selected.status === "pending" && !rejectMode && (
                 <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                  <button onClick={handleApprove} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Approve</button>
-                  <button onClick={() => setRejectMode(true)} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Reject</button>
+                  <button onClick={handleApprove} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Approve</button>
+                  <button onClick={() => setRejectMode(true)} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Reject</button>
                 </div>
               )}
 
@@ -347,11 +347,11 @@ function ReviewQueueSection({ t }) {
                 <div style={{ marginTop: 8 }}>
                   <label style={labelStyle}>Rejection reason (required)</label>
                   <textarea value={rejectReason} onChange={(e) => { setRejectReason(e.target.value); if (rejectError) setRejectError(""); }} rows={3}
-                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 13.5, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${rejectError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
+                    style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 13.5, fontFamily: "'Raleway', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${rejectError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
                   {rejectError && <p style={{ fontSize: 12, color: "#E27A7A", margin: "0 0 10px 0" }}>{rejectError}</p>}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={handleRejectConfirm} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#FFFFFF", background: "#C24747", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm rejection</button>
-                    <button onClick={() => { setRejectMode(false); setRejectReason(""); setRejectError(""); }} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
+                    <button onClick={handleRejectConfirm} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#FFFFFF", background: "#C24747", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Confirm rejection</button>
+                    <button onClick={() => { setRejectMode(false); setRejectReason(""); setRejectError(""); }} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Cancel</button>
                   </div>
                 </div>
               )}
@@ -434,7 +434,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
   };
 
   const labelStyle = { display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 5 };
-  const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13.5, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${hasError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none" });
+  const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13.5, fontFamily: "'Raleway', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${hasError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none" });
 
   return (
     <div>
@@ -446,10 +446,10 @@ function RestrictionManagerSection({ t, onGoToVip }) {
           </p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onGoToVip} style={{ fontSize: 13, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>
+          <button onClick={onGoToVip} style={{ fontSize: 13, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Raleway', sans-serif", whiteSpace: "nowrap" }}>
             VIP talent contracts \u2192
           </button>
-          <button onClick={() => setShowNewForm((v) => !v)} style={{ fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>
+          <button onClick={() => setShowNewForm((v) => !v)} style={{ fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Raleway', sans-serif", whiteSpace: "nowrap" }}>
             {showNewForm ? "Cancel" : "+ New restriction"}
           </button>
         </div>
@@ -509,8 +509,8 @@ function RestrictionManagerSection({ t, onGoToVip }) {
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Duration</label>
             <div style={{ display: "flex", gap: 8, marginBottom: draft.isPermanent ? 0 : 10 }}>
-              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: true }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: draft.isPermanent ? tokens.gold : t.textPrimary }}>Permanent</button>
-              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: false }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: !draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: !draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: !draft.isPermanent ? tokens.gold : t.textPrimary }}>Expires on a date</button>
+              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: true }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif", border: draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: draft.isPermanent ? tokens.gold : t.textPrimary }}>Permanent</button>
+              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: false }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif", border: !draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: !draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: !draft.isPermanent ? tokens.gold : t.textPrimary }}>Expires on a date</button>
             </div>
             {!draft.isPermanent && <input type="date" value={draft.expiresAt} onChange={(e) => setDraft((d) => ({ ...d, expiresAt: e.target.value }))} style={inputStyle(draftErrors.expiresAt)} />}
             {draftErrors.expiresAt && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.expiresAt}</p>}
@@ -518,7 +518,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
           <div style={{ background: "rgba(185,129,40,0.08)", border: "1px solid rgba(185,129,40,0.25)", borderRadius: 8, padding: "9px 12px", marginBottom: 16, fontSize: 11.5, color: t.textSecondary, lineHeight: 1.5 }}>
             If this customer has an active, unconsumed gifting allowance with this brand, it will be frozen (not forfeited) at the moment this restriction is created.
           </div>
-          <button type="submit" style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Create restriction</button>
+          <button type="submit" style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Create restriction</button>
         </form>
       )}
 
@@ -526,7 +526,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
         {[{ key: "active", label: "Active" }, { key: "expired", label: "Expired" }, { key: "removed", label: "Removed" }, { key: "all", label: "All" }].map((f) => {
           const active = filter === f.key;
           return (
-            <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 13px", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: active ? "rgba(185,129,40,0.12)" : "transparent", color: active ? tokens.gold : t.textSecondary }}>{f.label}</button>
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 13px", borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif", border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: active ? "rgba(185,129,40,0.12)" : "transparent", color: active ? tokens.gold : t.textSecondary }}>{f.label}</button>
           );
         })}
       </div>
@@ -565,7 +565,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
                 </div>
               )}
               {!removed && removingId !== r.id && (
-                <button onClick={() => openRemoval(r.id)} style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Remove restriction</button>
+                <button onClick={() => openRemoval(r.id)} style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Remove restriction</button>
               )}
               {removingId === r.id && (
                 <div style={{ marginTop: 12 }}>
@@ -573,8 +573,8 @@ function RestrictionManagerSection({ t, onGoToVip }) {
                   <textarea value={removalReason} onChange={(e) => { setRemovalReason(e.target.value); if (removalError) setRemovalError(""); }} rows={2} placeholder="e.g. Sponsorship conflict resolved." style={{ ...inputStyle(!!removalError), resize: "vertical", marginBottom: 8 }} />
                   {removalError && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "0 0 8px 0" }}>{removalError}</p>}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={confirmRemoval} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm removal</button>
-                    <button onClick={() => setRemovingId(null)} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
+                    <button onClick={confirmRemoval} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Confirm removal</button>
+                    <button onClick={() => setRemovingId(null)} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 7, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Cancel</button>
                   </div>
                 </div>
               )}
@@ -653,7 +653,7 @@ function VipContractsSection({ t }) {
   };
 
   const labelStyle = { display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 5 };
-  const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13.5, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${hasError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none" });
+  const inputStyle = (hasError) => ({ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13.5, fontFamily: "'Raleway', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${hasError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none" });
 
   const renderForm = (onSubmit, isEdit) => (
     <form onSubmit={onSubmit} style={{ background: t.surface, border: `1px solid ${tokens.gold}`, borderRadius: 12, padding: "18px 20px", marginBottom: 14 }}>
@@ -693,8 +693,8 @@ function VipContractsSection({ t }) {
         </button>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
-        <button type="submit" style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>{isEdit ? "Save changes" : "Create record"}</button>
-        <button type="button" onClick={() => { setShowNewForm(false); setEditingId(null); resetDraft(); }} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
+        <button type="submit" style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>{isEdit ? "Save changes" : "Create record"}</button>
+        <button type="button" onClick={() => { setShowNewForm(false); setEditingId(null); resetDraft(); }} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Cancel</button>
       </div>
     </form>
   );
@@ -731,7 +731,7 @@ function VipContractsSection({ t }) {
                   <span style={{ fontSize: 11, fontWeight: 500, color: tokens.gold, background: "rgba(185,129,40,0.14)", padding: "2px 8px", borderRadius: 5 }}>VIP</span>
                 </div>
                 {!showNewForm && !editingId && availableBrands.length > 0 && (
-                  <button onClick={openNewForm} style={{ fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>+ New contract record</button>
+                  <button onClick={openNewForm} style={{ fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontFamily: "'Raleway', sans-serif", whiteSpace: "nowrap" }}>+ New contract record</button>
                 )}
               </div>
               {showNewForm && renderForm(handleSaveNew, false)}
@@ -761,7 +761,7 @@ function VipContractsSection({ t }) {
                     {c.notes && <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "0 0 8px 0" }}>Notes: {c.notes}</p>}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${t.border}`, paddingTop: 10 }}>
                       <span style={{ fontSize: 11, color: t.textSecondary }}>{c.unlocked ? `Unlocked ${formatDate(c.unlockedAt)}` : `Last updated ${formatDate(c.updatedAt)}`}</span>
-                      <button onClick={() => openEdit(c)} style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 6, padding: "5px 11px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Edit</button>
+                      <button onClick={() => openEdit(c)} style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 6, padding: "5px 11px", cursor: "pointer", fontFamily: "'Raleway', sans-serif" }}>Edit</button>
                     </div>
                   </div>
                 ))}
@@ -792,17 +792,13 @@ export default function PlatformAdminDashboard() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         display: "flex",
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       {/* Sidebar */}
       <div
@@ -837,7 +833,7 @@ export default function PlatformAdminDashboard() {
                   borderRadius: 8,
                   fontSize: 13.5,
                   fontWeight: 500,
-                  fontFamily: "'Roboto', sans-serif",
+                  fontFamily: "'Raleway', sans-serif",
                   cursor: "pointer",
                   border: "none",
                   background: active ? "rgba(185,129,40,0.12)" : "transparent",
@@ -866,7 +862,7 @@ export default function PlatformAdminDashboard() {
             borderRadius: 6,
             padding: "7px 10px",
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >

@@ -244,7 +244,7 @@ export default function VipTalentContracts() {
     boxSizing: "border-box",
     padding: "9px 12px",
     fontSize: 13.5,
-    fontFamily: "'Roboto', sans-serif",
+    fontFamily: "'Raleway', sans-serif",
     color: t.textPrimary,
     background: t.inputBg,
     border: `1px solid ${hasError ? "#C24747" : t.border}`,
@@ -401,7 +401,7 @@ export default function VipTalentContracts() {
             border: "none",
             borderRadius: 8,
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
         >
           {isEdit ? "Save changes" : "Create record"}
@@ -423,7 +423,7 @@ export default function VipTalentContracts() {
             border: `1px solid ${t.border}`,
             borderRadius: 8,
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
         >
           Cancel
@@ -435,17 +435,13 @@ export default function VipTalentContracts() {
   return (
     <div
       style={{
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'Raleway', sans-serif",
         background: t.bgBase,
         minHeight: 640,
         padding: "28px 20px",
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       {/* Top bar */}
       <div
@@ -484,7 +480,7 @@ export default function VipTalentContracts() {
             borderRadius: 6,
             padding: "5px 10px",
             cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
+            fontFamily: "'Raleway', sans-serif",
           }}
         >
           {theme === "dark" ? "Preview: light" : "Preview: dark"}
@@ -610,7 +606,7 @@ export default function VipTalentContracts() {
                         borderRadius: 7,
                         padding: "8px 14px",
                         cursor: "pointer",
-                        fontFamily: "'Roboto', sans-serif",
+                        fontFamily: "'Raleway', sans-serif",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -745,7 +741,7 @@ export default function VipTalentContracts() {
                             borderRadius: 6,
                             padding: "5px 11px",
                             cursor: "pointer",
-                            fontFamily: "'Roboto', sans-serif",
+                            fontFamily: "'Raleway', sans-serif",
                           }}
                         >
                           Edit
