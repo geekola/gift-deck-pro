@@ -1,0 +1,6 @@
+Product name,Description,Item type,Cost price,Retail price,Currency,Return policy,Made to order?,Delivery window,Low-stock alert level,XS qty,S qty,M qty,L qty,XL qty,XXL qty
+Relaxed Linen Shirt,Lightweight summer linen shirt.,purchase,38,145,USD,Returns accepted within 14 days.,FALSE,,5,0,0,4,6,2,0
+Classic Crewneck Sweater,Soft merino crewneck.,purchase,,210,USD,Returns within 30 days.,FALSE,,3,2,5,5,3,1,0
+Weekend Hoodie,Brushed fleece pullover hoodie.,gift,42,,USD,,FALSE,,4,0,3,3,1,0,0
+Made to Measure Joggers,Custom-fit jogger.,gift,55,,USD,,TRUE,,,,,,,,
+Bad Currency Tee,Graphic tee.,purchase,15,45,GBP,Returns within 14 days.,FALSE,,2,1,2,2,1,0,0
