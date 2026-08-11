@@ -300,10 +300,6 @@ export default function CustomerSettings() {
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div style={{ width: "100%", maxWidth: 440 }}>
         <div

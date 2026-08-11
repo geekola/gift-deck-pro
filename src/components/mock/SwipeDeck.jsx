@@ -269,10 +269,6 @@ export default function SwipeDeck() {
         overflow: "hidden",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div
         style={{

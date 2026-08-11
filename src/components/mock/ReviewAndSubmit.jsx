@@ -285,10 +285,6 @@ export default function ReviewAndSubmit() {
           alignItems: "center",
         }}
       >
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-        />
         <div style={{ width: "100%", maxWidth: 420 }}>
           <div
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 14 }}
@@ -415,10 +411,6 @@ export default function ReviewAndSubmit() {
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div
         style={{

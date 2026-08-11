@@ -58,10 +58,6 @@ export default function CategorySelector() {
           transition: "background 0.2s ease",
         }}
       >
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-        />
         <div style={{ width: "100%", maxWidth: 400, textAlign: "center", paddingTop: 60 }}>
           <div
             style={{
@@ -113,10 +109,6 @@ export default function CategorySelector() {
         transition: "background 0.2s ease",
       }}
     >
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-      />
 
       <div
         style={{
