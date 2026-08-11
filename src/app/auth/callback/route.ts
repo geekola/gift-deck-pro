@@ -2,23 +2,66 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ensureCustomerRow } from "@/lib/supabase/ensure-customer";
 
-// Handles the redirect back from Supabase after Google OAuth (and any
-// other redirect-based flow, e.g. email confirmation links later).
+type PendingBrandRegistration = {
+  brandName: string;
+  contactFirstName: string;
+  contactLastName: string;
+  phoneNumber: string;
+  website: string;
+  fulfilmentEmail: string;
+  category: string;
+};
+
+// Handles the redirect back from Supabase after Google OAuth, and after an
+// email confirmation link (both customer sign-up and brand registration,
+// when email confirmation is turned on - see pending_brand_registration
+// below for why brand registration needs special handling here).
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/customer/categories";
 
-  if (code) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error && data.user) {
-      await ensureCustomerRow(supabase, data.user);
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+  if (!code) {
+    return NextResponse.redirect(`${origin}/customer/sign-in?error=auth`);
   }
 
-  // Auth failed or no code present - send back to sign-in with an error flag.
-  return NextResponse.redirect(`${origin}/customer/sign-in?error=auth`);
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error || !data.user) {
+    return NextResponse.redirect(`${origin}/customer/sign-in?error=auth`);
+  }
+
+  const pendingBrand = data.user.user_metadata?.pending_brand_registration as
+    | PendingBrandRegistration
+    | undefined;
+
+  if (pendingBrand) {
+    // Password signup on the brand registration screen, deferred here
+    // because email confirmation may be required - there's no session
+    // (and therefore no auth.uid() for the RPC below) until the user
+    // clicks the confirmation link and lands back on this route.
+    const { error: rpcError } = await supabase.rpc("register_brand", {
+      p_brand_name: pendingBrand.brandName,
+      p_contact_first_name: pendingBrand.contactFirstName,
+      p_contact_last_name: pendingBrand.contactLastName,
+      p_phone_number: pendingBrand.phoneNumber,
+      p_website: pendingBrand.website,
+      p_fulfilment_email: pendingBrand.fulfilmentEmail,
+      p_category: pendingBrand.category,
+    });
+
+    if (rpcError) {
+      // Most likely cause: this confirmation link was already used once
+      // and the brand was already created (register_brand rejects a
+      // second call once role is no longer 'customer'). Not a real
+      // failure from the user's point of view.
+      console.error("register_brand failed:", rpcError.message);
+    }
+
+    return NextResponse.redirect(`${origin}/brand/login?status=pending`);
+  }
+
+  await ensureCustomerRow(supabase, data.user);
+  const next = searchParams.get("next") ?? "/customer/categories";
+  return NextResponse.redirect(`${origin}${next}`);
 }

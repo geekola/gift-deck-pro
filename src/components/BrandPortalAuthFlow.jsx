@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -82,29 +84,47 @@ function validate(form) {
   return errors;
 }
 
-const STEPS = ["register", "pending", "login"];
+const emptyForm = {
+  brandName: "",
+  email: "",
+  password: "",
+  contactFirstName: "",
+  contactLastName: "",
+  phoneNumber: "",
+  website: "",
+  fulfilmentEmail: "",
+  category: "",
+};
 
 export default function BrandPortalAuthFlow() {
-  const [theme, setTheme] = useState("dark"); // default dark, per confirmed decision
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [theme, setTheme] = useState("dark");
   const [step, setStep] = useState("register");
-  const [form, setForm] = useState({
-    brandName: "",
-    email: "",
-    password: "",
-    contactFirstName: "",
-    contactLastName: "",
-    phoneNumber: "",
-    website: "",
-    fulfilmentEmail: "",
-    category: "",
-  });
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
   const t = tokens[theme];
+
+  // Landed here from the email-confirmation callback after registering.
+  // Read window.location directly (rather than next/navigation's
+  // useSearchParams) so this doesn't need a Suspense boundary - this
+  // component is already 100% client-rendered, nothing here runs during
+  // the server pass anyway.
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get("status");
+    if (status === "pending") {
+      setStep("pending");
+    }
+  }, []);
 
   const handleChange = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -120,28 +140,122 @@ export default function BrandPortalAuthFlow() {
     setErrors((e) => ({ ...e, category: undefined }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const allErrors = validate(form);
     setErrors(allErrors);
     setTouched(
       FIELD_DEFS.reduce((acc, f) => ({ ...acc, [f.key]: true }), { category: true })
     );
-    if (Object.keys(allErrors).length === 0) {
+    if (Object.keys(allErrors).length > 0) return;
+
+    setFormError("");
+    setIsSubmitting(true);
+
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        // Carried through to the /auth/callback route so it can create
+        // the brand + promote this account to brand_user once a session
+        // exists - signUp alone doesn't guarantee one if email
+        // confirmation is turned on.
+        data: {
+          pending_brand_registration: {
+            brandName: form.brandName,
+            contactFirstName: form.contactFirstName,
+            contactLastName: form.contactLastName,
+            phoneNumber: form.phoneNumber,
+            website: form.website,
+            fulfilmentEmail: form.fulfilmentEmail,
+            category: form.category,
+          },
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setIsSubmitting(false);
+      setFormError(error.message);
+      return;
+    }
+
+    if (data.session) {
+      // Email confirmation is off - we already have a session, register
+      // the brand right now instead of waiting on a callback that won't
+      // happen.
+      const { error: rpcError } = await supabase.rpc("register_brand", {
+        p_brand_name: form.brandName,
+        p_contact_first_name: form.contactFirstName,
+        p_contact_last_name: form.contactLastName,
+        p_phone_number: form.phoneNumber,
+        p_website: form.website,
+        p_fulfilment_email: form.fulfilmentEmail,
+        p_category: form.category,
+      });
+      setIsSubmitting(false);
+      if (rpcError) {
+        setFormError(rpcError.message);
+        return;
+      }
       setStep("pending");
+    } else {
+      setIsSubmitting(false);
+      setStep("check-email");
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Mock-only: in this prototype, any non-empty credentials show the
-    // "pending approval" gate, since this mock brand was just registered.
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setLoginError("Enter your email and password.");
       return;
     }
+
     setLoginError("");
-    setStep("pending");
+    setIsSubmitting(true);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword,
+    });
+
+    if (error) {
+      setIsSubmitting(false);
+      setLoginError(error.message);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, brand_id")
+      .eq("id", data.user.id)
+      .single();
+
+    if (!profile || profile.role !== "brand_user" || !profile.brand_id) {
+      setIsSubmitting(false);
+      setLoginError("This login isn't linked to a brand account.");
+      await supabase.auth.signOut();
+      return;
+    }
+
+    const { data: brand } = await supabase
+      .from("brands")
+      .select("status")
+      .eq("id", profile.brand_id)
+      .single();
+
+    setIsSubmitting(false);
+
+    if (brand?.status === "approved") {
+      router.push("/brand/products");
+      router.refresh();
+    } else {
+      // pending or rejected both land here - the "pending" panel below
+      // covers both cases in this preview; a real rejected state would
+      // want its own copy pulling brands.rejection_reason.
+      setStep("pending");
+    }
   };
 
   const inputStyle = (key) => ({
@@ -153,9 +267,7 @@ export default function BrandPortalAuthFlow() {
     fontWeight: 400,
     color: t.textPrimary,
     background: t.inputBg,
-    border: `1px solid ${
-      touched[key] && errors[key] ? "#C24747" : t.border
-    }`,
+    border: `1px solid ${touched[key] && errors[key] ? "#C24747" : t.border}`,
     borderRadius: 8,
     outline: "none",
   });
@@ -183,8 +295,6 @@ export default function BrandPortalAuthFlow() {
         transition: "background 0.2s ease",
       }}
     >
-
-      {/* Top bar: wordmark + theme toggle note */}
       <div
         style={{
           width: "100%",
@@ -196,24 +306,10 @@ export default function BrandPortalAuthFlow() {
         }}
       >
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: t.textPrimary,
-              letterSpacing: "0.01em",
-            }}
-          >
+          <span style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, letterSpacing: "0.01em" }}>
             Gift Deck Pro
           </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              letterSpacing: "0.03em",
-            }}
-          >
+          <span style={{ fontSize: 11, fontWeight: 500, color: t.textSecondary, letterSpacing: "0.03em" }}>
             BRAND PORTAL
           </span>
         </div>
@@ -249,48 +345,34 @@ export default function BrandPortalAuthFlow() {
         {step === "register" && (
           <>
             <div style={{ marginBottom: 24 }}>
-              <div
-                style={{
-                  width: 28,
-                  height: 3,
-                  background: tokens.gold,
-                  borderRadius: 2,
-                  marginBottom: 12,
-                }}
-              />
-              <h1
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: t.textPrimary,
-                  margin: "0 0 6px 0",
-                }}
-              >
+              <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
                 Register your brand
               </h1>
-              <p
-                style={{
-                  fontSize: 13,
-                  fontWeight: 400,
-                  color: t.textSecondary,
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
+              <p style={{ fontSize: 13, fontWeight: 400, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 A platform admin reviews every application before your portal access is activated.
               </p>
             </div>
 
+            {formError && (
+              <div
+                style={{
+                  background: "rgba(194,71,71,0.12)",
+                  border: "1px solid rgba(194,71,71,0.4)",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: 12.5,
+                  color: "#E27A7A",
+                  marginBottom: 18,
+                }}
+              >
+                {formError}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
               {FIELD_ROWS.map((row, rowIdx) => (
-                <div
-                  key={rowIdx}
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    marginBottom: 16,
-                  }}
-                >
+                <div key={rowIdx} style={{ display: "flex", gap: 12, marginBottom: 16 }}>
                   {row.map((field) => (
                     <div key={field.key} style={{ flex: 1, minWidth: 0 }}>
                       <label style={labelStyle}>{field.label}</label>
@@ -303,27 +385,12 @@ export default function BrandPortalAuthFlow() {
                         style={inputStyle(field.key)}
                       />
                       {field.helper && (
-                        <p
-                          style={{
-                            fontSize: 12,
-                            color: t.textSecondary,
-                            margin: "5px 0 0 0",
-                            lineHeight: 1.4,
-                          }}
-                        >
+                        <p style={{ fontSize: 12, color: t.textSecondary, margin: "5px 0 0 0", lineHeight: 1.4 }}>
                           {field.helper}
                         </p>
                       )}
                       {touched[field.key] && errors[field.key] && (
-                        <p
-                          style={{
-                            fontSize: 12,
-                            color: "#E27A7A",
-                            margin: "5px 0 0 0",
-                          }}
-                        >
-                          {errors[field.key]}
-                        </p>
+                        <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors[field.key]}</p>
                       )}
                     </div>
                   ))}
@@ -347,12 +414,8 @@ export default function BrandPortalAuthFlow() {
                           fontWeight: 500,
                           borderRadius: 7,
                           cursor: "pointer",
-                          border: selected
-                            ? `1px solid ${tokens.gold}`
-                            : `1px solid ${t.border}`,
-                          background: selected
-                            ? "rgba(185,129,40,0.12)"
-                            : "transparent",
+                          border: selected ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
+                          background: selected ? "rgba(185,129,40,0.12)" : "transparent",
                           color: selected ? tokens.gold : t.textPrimary,
                         }}
                       >
@@ -362,14 +425,13 @@ export default function BrandPortalAuthFlow() {
                   })}
                 </div>
                 {touched.category && errors.category && (
-                  <p style={{ fontSize: 12, color: "#E27A7A", margin: "8px 0 0 0" }}>
-                    {errors.category}
-                  </p>
+                  <p style={{ fontSize: 12, color: "#E27A7A", margin: "8px 0 0 0" }}>{errors.category}</p>
                 )}
               </div>
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -380,21 +442,15 @@ export default function BrandPortalAuthFlow() {
                   background: tokens.gold,
                   border: "none",
                   borderRadius: 8,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                Submit application
+                {isSubmitting ? "Submitting…" : "Submit application"}
               </button>
             </form>
 
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: 13,
-                color: t.textSecondary,
-                marginTop: 20,
-              }}
-            >
+            <p style={{ textAlign: "center", fontSize: 13, color: t.textSecondary, marginTop: 20 }}>
               Already approved?{" "}
               <span
                 onClick={() => setStep("login")}
@@ -406,35 +462,63 @@ export default function BrandPortalAuthFlow() {
           </>
         )}
 
-        {step === "pending" && (
+        {step === "check-email" && (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div
               style={{
-                width: 28,
-                height: 3,
-                background: tokens.gold,
-                borderRadius: 2,
-                margin: "0 auto 20px auto",
-              }}
-            />
-            <h1
-              style={{
-                fontSize: 19,
-                fontWeight: 700,
-                color: t.textPrimary,
-                margin: "0 0 10px 0",
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: "rgba(185,129,40,0.14)",
+                color: tokens.gold,
+                fontSize: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px auto",
               }}
             >
+              ✉
+            </div>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
+              Check your email
+            </h1>
+            <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
+              We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish
+              submitting your brand application.
+            </p>
+            <button
+              onClick={() => {
+                setStep("register");
+                setForm(emptyForm);
+                setErrors({});
+                setTouched({});
+                setFormError("");
+              }}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: t.textSecondary,
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 8,
+                padding: "9px 16px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+              }}
+            >
+              Back to start
+            </button>
+          </div>
+        )}
+
+        {step === "pending" && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, margin: "0 auto 20px auto" }} />
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
               Application received
             </h1>
-            <p
-              style={{
-                fontSize: 13.5,
-                color: t.textSecondary,
-                lineHeight: 1.6,
-                margin: "0 0 24px 0",
-              }}
-            >
+            <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
               A platform admin will review your brand application. You'll get an email at the
               address you provided once a decision is made. There's nothing else to do right now.
             </p>
@@ -450,25 +534,15 @@ export default function BrandPortalAuthFlow() {
                 marginBottom: 24,
               }}
             >
-              Status:{" "}
-              <span style={{ color: tokens.gold, fontWeight: 500 }}>Pending review</span>
+              Status: <span style={{ color: tokens.gold, fontWeight: 500 }}>Pending review</span>
             </div>
             <button
               onClick={() => {
                 setStep("register");
-                setForm({
-                  brandName: "",
-                  email: "",
-                  password: "",
-                  contactFirstName: "",
-                  contactLastName: "",
-                  phoneNumber: "",
-                  website: "",
-                  fulfilmentEmail: "",
-                  category: "",
-                });
+                setForm(emptyForm);
                 setErrors({});
                 setTouched({});
+                setFormError("");
               }}
               style={{
                 fontSize: 13,
@@ -482,7 +556,7 @@ export default function BrandPortalAuthFlow() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to start (preview reset)
+              Back to start
             </button>
           </div>
         )}
@@ -490,34 +564,12 @@ export default function BrandPortalAuthFlow() {
         {step === "login" && (
           <>
             <div style={{ marginBottom: 24 }}>
-              <div
-                style={{
-                  width: 28,
-                  height: 3,
-                  background: tokens.gold,
-                  borderRadius: 2,
-                  marginBottom: 12,
-                }}
-              />
-              <h1
-                style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: t.textPrimary,
-                  margin: "0 0 6px 0",
-                }}
-              >
+              <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
                 Log in
               </h1>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: t.textSecondary,
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                One login for every account type. What you see next depends on your role.
+              <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
+                Brand portal login.
               </p>
             </div>
 
@@ -565,14 +617,13 @@ export default function BrandPortalAuthFlow() {
                 />
               </div>
               {loginError && (
-                <p style={{ fontSize: 12, color: "#E27A7A", margin: "4px 0 16px 0" }}>
-                  {loginError}
-                </p>
+                <p style={{ fontSize: 12, color: "#E27A7A", margin: "4px 0 16px 0" }}>{loginError}</p>
               )}
               {!loginError && <div style={{ marginBottom: 16 }} />}
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -583,21 +634,15 @@ export default function BrandPortalAuthFlow() {
                   background: tokens.gold,
                   border: "none",
                   borderRadius: 8,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                Log in
+                {isSubmitting ? "Logging in…" : "Log in"}
               </button>
             </form>
 
-            <p
-              style={{
-                textAlign: "center",
-                fontSize: 13,
-                color: t.textSecondary,
-                marginTop: 20,
-              }}
-            >
+            <p style={{ textAlign: "center", fontSize: 13, color: t.textSecondary, marginTop: 20 }}>
               New brand?{" "}
               <span
                 onClick={() => setStep("register")}
@@ -609,17 +654,6 @@ export default function BrandPortalAuthFlow() {
           </>
         )}
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import BrandPortalAuthFlow from "@/components/mock/BrandPortalAuthFlow";
+import BrandPortalAuthFlow from "@/components/BrandPortalAuthFlow";
 
 export default function Page() {
   return <BrandPortalAuthFlow />;
