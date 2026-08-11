@@ -1,4 +1,4 @@
-import CustomerSignIn from "@/components/mock/CustomerSignIn";
+import CustomerSignIn from "@/components/CustomerSignIn";
 
 export default function Page() {
   return <CustomerSignIn />;

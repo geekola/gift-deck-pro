@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { ensureCustomerRow } from "@/lib/supabase/ensure-customer";
 
 // ── Design tokens (shared with Brand Portal — confirmed dark-default system) ─
 const tokens = {
@@ -49,25 +52,20 @@ function validateLogin(form) {
   return errors;
 }
 
-function getInitials(name) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
 export default function CustomerSignIn() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [mode, setMode] = useState("login"); // login | signup | success
-  const [authedCustomer, setAuthedCustomer] = useState(null);
+  const [mode, setMode] = useState("login"); // login | signup | check-email
+  const [pendingEmail, setPendingEmail] = useState("");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "", industry: "" });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [authError, setAuthError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const t = tokens[theme];
 
@@ -95,65 +93,80 @@ export default function CustomerSignIn() {
 
   const markTouched = (key) => setTouched((tt) => ({ ...tt, [key]: true }));
 
-  const handleGoogleAuth = () => {
-    // Mock-only: simulates a successful Google OAuth round-trip.
-    const mockCustomer = {
-      id: "cust_mock_google",
-      name: "Jordan Reyes",
-      email: "jordan.reyes@gmail.com",
-      authProvider: "google",
-      industry: "",
-      profileComplete: false,
-    };
-    setAuthedCustomer(mockCustomer);
-    setMode("success");
+  const handleGoogleAuth = async () => {
+    setAuthError("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    // On success the browser navigates away to Google, so there's nothing
+    // else to do here. Only reachable on failure to even start the flow
+    // (e.g. Google provider not configured in the Supabase dashboard yet).
+    if (error) setAuthError(error.message);
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const errs = validateLogin(loginForm);
     setErrors(errs);
     setTouched({ email: true, password: true });
-    if (Object.keys(errs).length === 0) {
-      // Mock-only: any valid-looking credentials log in as an existing,
-      // profile-complete customer — no real backend check exists here.
-      setAuthedCustomer({
-        id: "cust_mock_existing",
-        name: "Alex Morgan",
-        email: loginForm.email,
-        authProvider: "password",
-        industry: "Film",
-        profileComplete: true,
-      });
-      setMode("success");
+    if (Object.keys(errs).length > 0) return;
+
+    setAuthError("");
+    setIsSubmitting(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
     }
+    router.push("/customer/categories");
+    router.refresh();
   };
 
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
     const errs = validateSignup(signupForm);
     setErrors(errs);
     setTouched({ name: true, email: true, password: true, industry: true });
-    if (Object.keys(errs).length === 0) {
-      setAuthedCustomer({
-        id: "cust_mock_new",
-        name: signupForm.name,
-        email: signupForm.email,
-        authProvider: "password",
-        industry: signupForm.industry,
-        profileComplete: false,
-      });
-      setMode("success");
-    }
-  };
+    if (Object.keys(errs).length > 0) return;
 
-  const resetAll = () => {
-    setMode("login");
-    setAuthedCustomer(null);
-    setLoginForm({ email: "", password: "" });
-    setSignupForm({ name: "", email: "", password: "", industry: "" });
-    setErrors({});
-    setTouched({});
+    setAuthError("");
+    setIsSubmitting(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: signupForm.email,
+      password: signupForm.password,
+      options: {
+        data: { full_name: signupForm.name, industry: signupForm.industry },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    if (data.user) {
+      await ensureCustomerRow(supabase, data.user, signupForm.name);
+    }
+
+    if (data.session) {
+      // Email confirmation is off for this project - we're signed in already.
+      router.push("/customer/categories");
+      router.refresh();
+    } else {
+      // Email confirmation is required before a session exists.
+      setPendingEmail(signupForm.email);
+      setMode("check-email");
+    }
   };
 
   return (
@@ -169,7 +182,6 @@ export default function CustomerSignIn() {
         transition: "background 0.2s ease",
       }}
     >
-
       <div
         style={{
           width: "100%",
@@ -212,6 +224,22 @@ export default function CustomerSignIn() {
           padding: "32px 28px",
         }}
       >
+        {authError && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 18,
+            }}
+          >
+            {authError}
+          </div>
+        )}
+
         {mode === "login" && (
           <>
             <div style={{ marginBottom: 24 }}>
@@ -286,6 +314,7 @@ export default function CustomerSignIn() {
               </div>
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -296,10 +325,11 @@ export default function CustomerSignIn() {
                   background: tokens.gold,
                   border: "none",
                   borderRadius: 8,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                Sign in
+                {isSubmitting ? "Signing in…" : "Sign in"}
               </button>
             </form>
 
@@ -310,6 +340,7 @@ export default function CustomerSignIn() {
                   setMode("signup");
                   setErrors({});
                   setTouched({});
+                  setAuthError("");
                 }}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
@@ -445,6 +476,7 @@ export default function CustomerSignIn() {
 
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   width: "100%",
                   padding: "12px 0",
@@ -455,10 +487,11 @@ export default function CustomerSignIn() {
                   background: tokens.gold,
                   border: "none",
                   borderRadius: 8,
-                  cursor: "pointer",
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                Create account
+                {isSubmitting ? "Creating account…" : "Create account"}
               </button>
             </form>
 
@@ -469,6 +502,7 @@ export default function CustomerSignIn() {
                   setMode("login");
                   setErrors({});
                   setTouched({});
+                  setAuthError("");
                 }}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
@@ -478,7 +512,7 @@ export default function CustomerSignIn() {
           </>
         )}
 
-        {mode === "success" && authedCustomer && (
+        {mode === "check-email" && (
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             <div
               style={{
@@ -487,59 +521,32 @@ export default function CustomerSignIn() {
                 borderRadius: "50%",
                 background: "rgba(185,129,40,0.14)",
                 color: tokens.gold,
-                fontSize: 18,
-                fontWeight: 700,
+                fontSize: 22,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 margin: "0 auto 18px auto",
               }}
             >
-              {getInitials(authedCustomer.name)}
+              ✉
             </div>
 
             <h1 style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-              {authedCustomer.profileComplete ? `Welcome back, ${authedCustomer.name.split(" ")[0]}` : `You're in, ${authedCustomer.name.split(" ")[0]}`}
+              Check your email
             </h1>
 
-            <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 4px 0" }}>
-              {authedCustomer.email}
+            <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 22px 0", lineHeight: 1.5 }}>
+              We sent a confirmation link to <strong>{pendingEmail}</strong>. Click it to finish
+              setting up your account.
             </p>
-            <p style={{ fontSize: 12, color: t.textSecondary, margin: "0 0 22px 0" }}>
-              Signed in via {authedCustomer.authProvider === "google" ? "Google" : "email & password"}
-            </p>
-
-            <div
-              style={{
-                background: t.surfaceRaised,
-                border: `1px solid ${t.border}`,
-                borderRadius: 10,
-                padding: "14px 16px",
-                fontSize: 13,
-                color: t.textSecondary,
-                textAlign: "left",
-                marginBottom: 24,
-              }}
-            >
-              {authedCustomer.profileComplete ? (
-                <>
-                  Profile status:{" "}
-                  <span style={{ color: "#8FBF5A", fontWeight: 500 }}>Complete</span> — next stop is
-                  the swipe deck.
-                </>
-              ) : (
-                <>
-                  Profile status:{" "}
-                  <span style={{ color: tokens.gold, fontWeight: 500 }}>
-                    {authedCustomer.industry ? "Needs measurements" : "Needs industry + measurements"}
-                  </span>{" "}
-                  — new accounts complete a short profile before reaching the deck.
-                </>
-              )}
-            </div>
 
             <button
-              onClick={resetAll}
+              onClick={() => {
+                setMode("login");
+                setSignupForm({ name: "", email: "", password: "", industry: "" });
+                setErrors({});
+                setTouched({});
+              }}
               style={{
                 fontSize: 13,
                 fontWeight: 500,
@@ -552,15 +559,11 @@ export default function CustomerSignIn() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to start (preview reset)
+              Back to sign in
             </button>
           </div>
         )}
       </div>
-
-      <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7 }}>
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }
