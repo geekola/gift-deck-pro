@@ -1,4 +1,4 @@
-import OrderStatus from "@/components/mock/OrderStatus";
+import OrderStatus from "@/components/OrderStatus";
 
 export default function Page() {
   return <OrderStatus />;

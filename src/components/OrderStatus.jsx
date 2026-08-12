@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
   dark: {
@@ -22,63 +23,46 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock requisitions — deliberately one per real state in the machine,
-// continuing from Review & Submit's outcome: the Halden & Vance request
-// passed its allowance check there and is represented here as `invoiced`.
-// Atelier Noir's request FAILED allowance check last screen and never
-// reached `submitted` at all, so it correctly does not appear here.
-const SEED_REQUISITIONS = [
-  {
-    id: "req_001",
-    brandName: "Halden & Vance",
-    items: [{ name: "Wool Travel Blazer", size: "M" }],
-    state: "invoiced",
-    itemType: "purchase",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    submittedAt: "2026-06-24T10:00:00Z",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-  },
-  {
-    id: "req_002",
-    brandName: "Roux Studio",
-    items: [{ name: "Bespoke Evening Gown", size: "Custom fit" }],
-    state: "confirmed",
-    itemType: "gift",
-    isMadeToOrder: true,
-    deliveryWindow: "5–7 weeks",
-    submittedAt: "2026-06-18T14:00:00Z",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-  },
-  {
-    id: "req_003",
-    brandName: "Atelier Noir",
-    items: [{ name: "Suede Chelsea Boot", size: "10" }],
-    state: "dispatched",
-    itemType: "purchase",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    submittedAt: "2026-06-10T09:00:00Z",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-    fullAddress: "118 Ocean Ave, Apt 4B, Los Angeles, CA 90291",
-    trackingNumber: "1Z999AA10123456784",
-  },
-  {
-    id: "req_004",
-    brandName: "Halden & Vance",
-    items: [{ name: "Cashmere Crewneck", size: "L" }],
-    state: "declined",
-    itemType: "gift",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    submittedAt: "2026-06-05T11:00:00Z",
-    shippingCity: "Los Angeles",
-    shippingState: "CA",
-  },
-];
+// Maps a requisitions row (joined with brand, shipping address, and line
+// items) onto the shape the render logic below expects. decline_reason is
+// deliberately never in the select() this comes from - per migration
+// 0007's own comment, that's "enforced by RLS/API layer selecting this
+// column out", i.e. by never fetching it here, not by a DB-level lock.
+//
+// is_made_to_order / delivery_window aren't part of requisition_items'
+// snapshot columns (only price/cost/currency/size/item_type are), so
+// those two come from the live product row instead of a point-in-time
+// snapshot - fine for descriptive/logistics fields, unlike price.
+function mapRequisition(row) {
+  return {
+    id: row.id,
+    brandName: row.brands?.brand_name ?? "",
+    state: row.state,
+    submittedAt: row.submitted_at,
+    trackingNumber: row.tracking_number,
+    shippingCity: row.shipping_addresses?.city ?? "",
+    shippingState: row.shipping_addresses?.state ?? "",
+    fullAddress: row.shipping_addresses
+      ? [
+          row.shipping_addresses.line1,
+          row.shipping_addresses.line2,
+          row.shipping_addresses.city,
+          row.shipping_addresses.state,
+          row.shipping_addresses.zip,
+        ]
+          .filter(Boolean)
+          .join(", ")
+      : null,
+    items: (row.requisition_items || []).map((it) => ({
+      id: it.id,
+      name: it.products?.name ?? "",
+      size: it.size_snapshot,
+      itemType: it.item_type_snapshot,
+      isMadeToOrder: it.products?.is_made_to_order ?? false,
+      deliveryWindow: it.products?.delivery_window ?? null,
+    })),
+  };
+}
 
 const STATE_ORDER = ["submitted", "invoiced", "confirmed", "dispatched"];
 const STATE_LABELS = {
@@ -130,13 +114,49 @@ function StateProgress({ state, t }) {
 }
 
 export default function OrderStatus() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
   const [filter, setFilter] = useState("active");
   const [expandedId, setExpandedId] = useState(null);
+  const [requisitions, setRequisitions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("requisitions")
+        .select(
+          `id, state, submitted_at, tracking_number,
+           brands(brand_name),
+           shipping_addresses(line1, line2, city, state, zip),
+           requisition_items(id, size_snapshot, item_type_snapshot,
+             products(name, is_made_to_order, delivery_window))`
+        )
+        .eq("customer_id", user.id)
+        .order("submitted_at", { ascending: false });
+
+      if (error) {
+        setLoadError(error.message);
+      } else {
+        setRequisitions((data || []).map(mapRequisition));
+      }
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
 
-  const visible = SEED_REQUISITIONS.filter((r) => {
+  const visible = requisitions.filter((r) => {
     if (filter === "active") return r.state !== "declined";
     if (filter === "declined") return r.state === "declined";
     return true;
@@ -229,7 +249,29 @@ export default function OrderStatus() {
           })}
         </div>
 
-        {visible.length === 0 && (
+        {loadError && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {loadError}
+          </div>
+        )}
+
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "32px 0", fontSize: 13, color: t.textSecondary }}>
+            Loading…
+          </div>
+        )}
+
+        {!isLoading && visible.length === 0 && (
           <div
             style={{
               border: `1px dashed ${t.border}`,
@@ -243,7 +285,7 @@ export default function OrderStatus() {
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {visible.map((req) => {
+          {!isLoading && visible.map((req) => {
             const isExpanded = expandedId === req.id;
             const isDeclined = req.state === "declined";
             const isDispatched = req.state === "dispatched";
@@ -345,29 +387,27 @@ export default function OrderStatus() {
                           </div>
                         )}
 
-                        {req.isMadeToOrder && req.itemType === "gift" && (
-                          <div>
-                            <span style={labelStyle}>Delivery window</span>
-                            {req.state === "confirmed" || isDispatched ? (
-                              <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "3px 0 0 0" }}>
-                                {req.deliveryWindow}
-                              </p>
-                            ) : (
-                              <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "3px 0 0 0" }}>
-                                Shared once {req.brandName} confirms.
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {req.isMadeToOrder && req.itemType === "purchase" && (
-                          <div>
-                            <span style={labelStyle}>Delivery window</span>
-                            <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "3px 0 0 0" }}>
-                              {req.deliveryWindow}
-                            </p>
-                          </div>
-                        )}
+                        {/* Delivery window is per-item (a requisition can mix
+                            made-to-order and in-stock pieces) rather than
+                            assumed uniform across the whole requisition. */}
+                        {req.items
+                          .filter((i) => i.isMadeToOrder)
+                          .map((i, idx) => (
+                            <div key={idx} style={{ marginBottom: 10 }}>
+                              <span style={labelStyle}>
+                                Delivery window {req.items.length > 1 ? `— ${i.name}` : ""}
+                              </span>
+                              {i.itemType === "purchase" || req.state === "confirmed" || isDispatched ? (
+                                <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "3px 0 0 0" }}>
+                                  {i.deliveryWindow}
+                                </p>
+                              ) : (
+                                <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "3px 0 0 0" }}>
+                                  Shared once {req.brandName} confirms.
+                                </p>
+                              )}
+                            </div>
+                          ))}
                       </>
                     )}
                   </div>
@@ -377,10 +417,6 @@ export default function OrderStatus() {
           })}
         </div>
       </div>
-
-      <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only, no live backend connection.
-      </p>
     </div>
   );
 }
