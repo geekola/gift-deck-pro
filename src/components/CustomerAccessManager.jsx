@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -35,83 +36,108 @@ const PERIOD_TYPES = [
 ];
 const CURRENCIES = ["USD", "EUR"];
 
-// Mock customers — illustrative only, not real customer data.
-// Deliberately spans: unactioned (selective policy, awaiting decision), approved with an
-// active allowance nearing its limit, approved with no allowance set yet, and denied.
-const SEED_CUSTOMERS = [
-  {
-    id: "cust_001",
-    name: "Alex M.",
-    industry: "Film",
-    status: "unactioned",
-    allowance: null,
-    approvedContacts: [],
-  },
-  {
-    id: "cust_002",
-    name: "Priya K.",
-    industry: "Music",
-    status: "approved",
-    allowance: {
-      limit: 5000,
-      currency: "USD",
-      periodType: "calendar_quarter",
-      consumed: 4600,
-    },
-    // Only contacts the customer has explicitly marked visible-to-brands
-    // ever appear here — this is a filtered view, not the customer's full
-    // contact list (which also includes non-approved contacts elsewhere).
-    approvedContacts: [
-      {
-        id: "contact_001",
-        role: "Manager",
-        firstName: "Dana",
-        lastName: "Whitfield",
-        phone: "+1 (310) 555-0142",
-        email: "dana@whitfieldmgmt.com",
-        isAuthorizedPersonnel: true,
-      },
-    ],
-  },
-  {
-    id: "cust_003",
-    name: "Jonah R.",
-    industry: "Sports",
-    status: "approved",
-    allowance: null,
-    approvedContacts: [],
-  },
-  {
-    id: "cust_004",
-    name: "Sofia L.",
-    industry: "Fashion",
-    status: "unactioned",
-    allowance: null,
-    approvedContacts: [],
-  },
-  {
-    id: "cust_005",
-    name: "Devon T.",
-    industry: "Media",
-    status: "denied",
-    allowance: null,
-  },
-];
-
 function formatCurrency(amount, currency) {
   const symbol = currency === "EUR" ? "€" : "$";
   return `${symbol}${amount.toLocaleString()}`;
 }
 
+// customer_access_status enum values are 'unactioned'/'approved'/'denied' -
+// same strings the mock already used, no mapping needed there. Same for
+// allowance_period_type ('calendar_quarter' etc.) matching PERIOD_TYPES keys.
+function mapCustomer(row, allowanceByCustomerId) {
+  const allowance = allowanceByCustomerId[row.customer_id];
+  return {
+    id: row.customer_id,
+    name: row.customers?.name ?? "",
+    industry: row.customers?.industry ?? "",
+    status: row.status,
+    allowance: allowance
+      ? {
+          limit: Number(allowance.limit_amount),
+          currency: allowance.currency,
+          periodType: allowance.period_type,
+          consumed: Number(allowance.consumed),
+        }
+      : null,
+    approvedContacts: [],
+  };
+}
+
 export default function CustomerAccessManager() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [accessPolicy, setAccessPolicy] = useState("selective"); // open | selective | invite-only
-  const [customers, setCustomers] = useState(SEED_CUSTOMERS);
-  const [selectedId, setSelectedId] = useState(SEED_CUSTOMERS[0].id);
+  const [brandId, setBrandId] = useState(null);
+  const [accessPolicy, setAccessPolicy] = useState("selective"); // open | selective | invite_only
+  const [customers, setCustomers] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState("all");
   const [industryFilter, setIndustryFilter] = useState("all");
   const [allowanceDraft, setAllowanceDraft] = useState(null);
   const [allowanceError, setAllowanceError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+
+  const loadData = async (bId) => {
+    const [accessResult, allowanceResult] = await Promise.all([
+      supabase
+        .from("customer_brand_access")
+        .select("customer_id, status, customers(name, industry)")
+        .eq("brand_id", bId),
+      supabase.from("gifting_allowances").select("*").eq("brand_id", bId),
+    ]);
+
+    if (accessResult.error) {
+      setLoadError(accessResult.error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    const allowanceByCustomerId = {};
+    for (const row of allowanceResult.data || []) {
+      allowanceByCustomerId[row.customer_id] = row;
+    }
+
+    const mapped = (accessResult.data || []).map((row) => mapCustomer(row, allowanceByCustomerId));
+    setCustomers(mapped);
+    setSelectedId((current) => current ?? mapped[0]?.id ?? null);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("brand_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.brand_id) {
+        setLoadError("Couldn't load your brand account. Try refreshing.");
+        setIsLoading(false);
+        return;
+      }
+
+      setBrandId(profile.brand_id);
+
+      const { data: brand, error: brandError } = await supabase
+        .from("brands")
+        .select("access_policy")
+        .eq("id", profile.brand_id)
+        .single();
+
+      if (!brandError && brand) setAccessPolicy(brand.access_policy);
+
+      await loadData(profile.brand_id);
+    })();
+  }, []);
 
   const t = tokens[theme];
   const selected = customers.find((c) => c.id === selectedId) || null;
@@ -124,13 +150,46 @@ export default function CustomerAccessManager() {
 
   const unactionedCount = customers.filter((c) => c.status === "unactioned").length;
 
-  const handleApprove = (id) => {
-    setCustomers((cs) =>
-      cs.map((c) => (c.id === id ? { ...c, status: "approved" } : c))
-    );
+  const handleAccessPolicyChange = async (policy) => {
+    setAccessPolicy(policy);
+    if (!brandId) return;
+    const { error } = await supabase.from("brands").update({ access_policy: policy }).eq("id", brandId);
+    if (error) setActionError(error.message);
   };
 
-  const handleDeny = (id) => {
+  const handleApprove = async (id) => {
+    setActionError("");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("customer_brand_access")
+      .update({ status: "approved", decided_at: new Date().toISOString(), decided_by: user?.id ?? null })
+      .eq("customer_id", id)
+      .eq("brand_id", brandId);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    setCustomers((cs) => cs.map((c) => (c.id === id ? { ...c, status: "approved" } : c)));
+  };
+
+  const handleDeny = async (id) => {
+    setActionError("");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("customer_brand_access")
+      .update({ status: "denied", decided_at: new Date().toISOString(), decided_by: user?.id ?? null })
+      .eq("customer_id", id)
+      .eq("brand_id", brandId);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setCustomers((cs) => cs.map((c) => (c.id === id ? { ...c, status: "denied" } : c)));
   };
 
@@ -143,12 +202,37 @@ export default function CustomerAccessManager() {
     setAllowanceError("");
   };
 
-  const saveAllowance = () => {
+  const saveAllowance = async () => {
     const limitNum = Number(allowanceDraft.limit);
     if (!allowanceDraft.limit || isNaN(limitNum) || limitNum <= 0) {
       setAllowanceError("Enter a limit greater than zero.");
       return;
     }
+
+    const hadAllowance = !!selected.allowance;
+    const { error } = hadAllowance
+      ? await supabase
+          .from("gifting_allowances")
+          .update({
+            limit_amount: limitNum,
+            currency: allowanceDraft.currency,
+            period_type: allowanceDraft.periodType,
+          })
+          .eq("customer_id", selected.id)
+          .eq("brand_id", brandId)
+      : await supabase.from("gifting_allowances").insert({
+          customer_id: selected.id,
+          brand_id: brandId,
+          limit_amount: limitNum,
+          currency: allowanceDraft.currency,
+          period_type: allowanceDraft.periodType,
+        });
+
+    if (error) {
+      setAllowanceError(error.message);
+      return;
+    }
+
     setCustomers((cs) =>
       cs.map((c) =>
         c.id === selected.id
@@ -166,6 +250,48 @@ export default function CustomerAccessManager() {
     );
     setAllowanceDraft(null);
   };
+
+  // Approved contacts are only ever fetched for the currently-selected
+  // approved customer (RLS - customer_contacts_brand_select_if_access,
+  // migration 0012 - only allows this for customers with an approved
+  // access row with this brand anyway).
+  const loadApprovedContacts = async (customerId) => {
+    setIsLoadingContacts(true);
+    const { data, error } = await supabase
+      .from("customer_contacts")
+      .select("*")
+      .eq("customer_id", customerId)
+      .eq("is_approved_for_brand_view", true);
+
+    setIsLoadingContacts(false);
+    if (error) return;
+
+    setCustomers((cs) =>
+      cs.map((c) =>
+        c.id === customerId
+          ? {
+              ...c,
+              approvedContacts: (data || []).map((row) => ({
+                id: row.id,
+                role: row.role,
+                firstName: row.first_name,
+                lastName: row.last_name,
+                phone: row.phone,
+                email: row.email,
+                isAuthorizedPersonnel: row.is_authorized_personnel,
+              })),
+            }
+          : c
+      )
+    );
+  };
+
+  useEffect(() => {
+    if (selected && selected.status === "approved") {
+      loadApprovedContacts(selected.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
 
   const labelStyle = {
     display: "block",
@@ -289,6 +415,22 @@ export default function CustomerAccessManager() {
           </p>
         </div>
 
+        {(loadError || actionError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 18,
+            }}
+          >
+            {loadError || actionError}
+          </div>
+        )}
+
         {/* Access policy selector */}
         <div
           style={{
@@ -310,13 +452,15 @@ export default function CustomerAccessManager() {
             {[
               { key: "open", label: "Open", desc: "All customers, no approval" },
               { key: "selective", label: "Selective", desc: "Customer must be approved" },
-              { key: "invite-only", label: "Invite-only", desc: "Same as Selective, framed as exclusive" },
+              // DB enum is invite_only (underscore) - see migration 0001's note
+              // that the UI's "invite-only" hyphenated key gets normalized.
+              { key: "invite_only", label: "Invite-only", desc: "Same as Selective, framed as exclusive" },
             ].map((opt) => {
               const active = accessPolicy === opt.key;
               return (
                 <button
                   key={opt.key}
-                  onClick={() => setAccessPolicy(opt.key)}
+                  onClick={() => handleAccessPolicyChange(opt.key)}
                   style={{
                     flex: 1,
                     textAlign: "left",
@@ -433,12 +577,17 @@ export default function CustomerAccessManager() {
               overflow: "hidden",
             }}
           >
-            {visibleCustomers.length === 0 && (
+            {isLoading && (
+              <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>
+                Loading customers…
+              </div>
+            )}
+            {!isLoading && visibleCustomers.length === 0 && (
               <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>
                 No customers match this filter.
               </div>
             )}
-            {visibleCustomers.map((c, idx) => {
+            {!isLoading && visibleCustomers.map((c, idx) => {
               const isSelected = c.id === selectedId;
               return (
                 <div
@@ -600,7 +749,11 @@ export default function CustomerAccessManager() {
                       contacts, just the ones they've chosen to make visible to you.
                     </p>
 
-                    {(!selected.approvedContacts || selected.approvedContacts.length === 0) ? (
+                    {isLoadingContacts ? (
+                      <p style={{ fontSize: 12.5, color: t.textSecondary, margin: "0 0 18px 0" }}>
+                        Loading contacts…
+                      </p>
+                    ) : (!selected.approvedContacts || selected.approvedContacts.length === 0) ? (
                       <p style={{ fontSize: 12.5, color: t.textSecondary, margin: "0 0 18px 0" }}>
                         This customer hasn't shared any contacts with brand managers.
                       </p>
@@ -852,18 +1005,6 @@ export default function CustomerAccessManager() {
           </div>
         </div>
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-          textAlign: "center",
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }
