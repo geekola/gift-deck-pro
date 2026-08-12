@@ -111,20 +111,56 @@ export default function BrandPortalAuthFlow() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const t = tokens[theme];
 
-  // Landed here from the email-confirmation callback after registering.
-  // Read window.location directly (rather than next/navigation's
-  // useSearchParams) so this doesn't need a Suspense boundary - this
-  // component is already 100% client-rendered, nothing here runs during
-  // the server pass anyway.
+  // Landed here either from the email-confirmation callback after
+  // registering, or bounced back by the (protected) layout's guard (a
+  // signed-in but not-yet-approved brand_user tried to load a protected
+  // page directly). Read window.location directly (rather than
+  // next/navigation's useSearchParams) so this doesn't need a Suspense
+  // boundary - this component is already 100% client-rendered.
   useEffect(() => {
-    const status = new URLSearchParams(window.location.search).get("status");
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+    const err = params.get("error");
+
     if (status === "pending") {
       setStep("pending");
+    } else if (status === "rejected") {
+      fetchRejectionReason();
+    } else if (err === "forbidden") {
+      setLoginError("This login isn't linked to a brand account.");
+      setStep("login");
     }
   }, []);
+
+  const fetchRejectionReason = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setStep("login");
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("brand_id")
+      .eq("id", user.id)
+      .single();
+    if (!profile?.brand_id) {
+      setStep("login");
+      return;
+    }
+    const { data: brand } = await supabase
+      .from("brands")
+      .select("rejection_reason")
+      .eq("id", profile.brand_id)
+      .single();
+    setRejectionReason(brand?.rejection_reason || "");
+    setStep("rejected");
+  };
 
   const handleChange = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -241,7 +277,7 @@ export default function BrandPortalAuthFlow() {
 
     const { data: brand } = await supabase
       .from("brands")
-      .select("status")
+      .select("status, rejection_reason")
       .eq("id", profile.brand_id)
       .single();
 
@@ -250,10 +286,10 @@ export default function BrandPortalAuthFlow() {
     if (brand?.status === "approved") {
       router.push("/brand/products");
       router.refresh();
+    } else if (brand?.status === "rejected") {
+      setRejectionReason(brand?.rejection_reason || "");
+      setStep("rejected");
     } else {
-      // pending or rejected both land here - the "pending" panel below
-      // covers both cases in this preview; a real rejected state would
-      // want its own copy pulling brands.rejection_reason.
       setStep("pending");
     }
   };
@@ -557,6 +593,66 @@ export default function BrandPortalAuthFlow() {
               }}
             >
               Back to start
+            </button>
+          </div>
+        )}
+
+        {step === "rejected" && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ width: 28, height: 3, background: "#C24747", borderRadius: 2, margin: "0 auto 20px auto" }} />
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
+              Application not approved
+            </h1>
+            <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 16px 0" }}>
+              A platform admin reviewed your brand application and it wasn't approved for portal
+              access.
+            </p>
+            <div
+              style={{
+                background: t.surfaceRaised,
+                border: `1px solid ${t.border}`,
+                borderRadius: 10,
+                padding: "14px 16px",
+                fontSize: 13,
+                color: t.textSecondary,
+                textAlign: "left",
+                marginBottom: 24,
+              }}
+            >
+              <div style={{ marginBottom: rejectionReason ? 8 : 0 }}>
+                Status: <span style={{ color: "#C24747", fontWeight: 500 }}>Not approved</span>
+              </div>
+              {rejectionReason && (
+                <div>
+                  <span style={{ color: t.textPrimary, fontWeight: 500 }}>Reason: </span>
+                  {rejectionReason}
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 20px 0" }}>
+              If you think this is a mistake, contact support rather than re-registering — a new
+              application won't override this decision.
+            </p>
+            <button
+              onClick={() => {
+                setStep("login");
+                setLoginEmail("");
+                setLoginPassword("");
+                setLoginError("");
+              }}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: t.textSecondary,
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 8,
+                padding: "9px 16px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+              }}
+            >
+              Back to log in
             </button>
           </div>
         )}

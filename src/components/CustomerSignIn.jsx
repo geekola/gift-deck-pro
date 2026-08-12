@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ensureCustomerRow } from "@/lib/supabase/ensure-customer";
@@ -68,6 +68,15 @@ export default function CustomerSignIn() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const t = tokens[theme];
+
+  // Landed back here from the (protected) layout's guard - it does the
+  // actual role check server-side on every request; this just surfaces
+  // the reason if it bounced someone back.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "forbidden") {
+      setAuthError("That account isn't a customer account. Try the brand or admin login instead.");
+    }
+  }, []);
 
   const labelStyle = {
     display: "block",
