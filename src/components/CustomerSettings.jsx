@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
   dark: {
@@ -24,32 +25,20 @@ const tokens = {
   gold: "#B98128",
 };
 
-const SEED_ADDRESSES = [
-  {
-    id: "addr_001",
-    label: "Home",
-    line1: "118 Ocean Ave, Apt 4B",
-    line2: "",
-    city: "Los Angeles",
-    state: "CA",
-    zip: "90291",
-    country: "United States",
-    isDefault: true,
-    careOfContactId: null,
-  },
-  {
-    id: "addr_002",
-    label: "On location — Atlanta shoot",
-    line1: "1100 Peachtree St NE, Suite 900",
-    line2: "",
-    city: "Atlanta",
-    state: "GA",
-    zip: "30309",
-    country: "United States",
-    isDefault: false,
-    careOfContactId: "contact_001",
-  },
-];
+function mapAddress(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    line1: row.line1,
+    line2: row.line2 || "",
+    city: row.city,
+    state: row.state,
+    zip: row.zip,
+    country: row.country,
+    isDefault: row.is_default,
+    careOfContactId: row.care_of_contact_id,
+  };
+}
 
 const CONTACT_ROLES = ["Manager", "Agent", "Assistant", "Other"];
 
@@ -68,28 +57,18 @@ function newContactDraft() {
 // New entity: CustomerContact. Flexible list, tagged by role — not fixed
 // slots. isAuthorizedPersonnel and isApprovedForBrandView are independent
 // flags, not implied by role.
-const SEED_CONTACTS = [
-  {
-    id: "contact_001",
-    role: "Manager",
-    firstName: "Dana",
-    lastName: "Whitfield",
-    phone: "+1 (310) 555-0142",
-    email: "dana@whitfieldmgmt.com",
-    isAuthorizedPersonnel: true,
-    isApprovedForBrandView: true,
-  },
-  {
-    id: "contact_002",
-    role: "Assistant",
-    firstName: "Theo",
-    lastName: "Park",
-    phone: "+1 (213) 555-0188",
-    email: "theo.park@gmail.com",
-    isAuthorizedPersonnel: true,
-    isApprovedForBrandView: false,
-  },
-];
+function mapContact(row) {
+  return {
+    id: row.id,
+    role: row.role,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    phone: row.phone || "",
+    email: row.email || "",
+    isAuthorizedPersonnel: row.is_authorized_personnel,
+    isApprovedForBrandView: row.is_approved_for_brand_view,
+  };
+}
 
 function newAddressDraft() {
   return { label: "", line1: "", line2: "", city: "", state: "", zip: "", country: "United States" };
@@ -122,14 +101,6 @@ const FEMALE_FIELDS = [
   { id: "shoe_size", label: "Shoe size" },
 ];
 
-// Seeded as if the customer partially completed the measurement screen
-// earlier in this build sequence — gives the editor something real to show.
-const SEED_MEASUREMENTS = {
-  gender: "female",
-  unit: "in",
-  vals: { bust: "34", waist: "26", hips: "37", inseam: "30" },
-};
-
 function convert(value, fromUnit, toUnit) {
   if (value === "" || value == null || isNaN(Number(value))) return value;
   const num = Number(value);
@@ -137,6 +108,14 @@ function convert(value, fromUnit, toUnit) {
   const converted = fromUnit === "in" ? num * 2.54 : num / 2.54;
   return Math.round(converted * 10) / 10;
 }
+
+// This screen's gender toggle uses "male"/"female" (matches
+// MeasurementProfileSetup.jsx's field-set keys), but measurement_profiles.
+// gender_set is 'mens'/'womens' (migration 0003). values_cm is always
+// canonical cm regardless of the customer's preferred_unit - convert to
+// preferred_unit on load, back to cm on save.
+const GENDER_SET_TO_UI = { mens: "male", womens: "female" };
+const UI_TO_GENDER_SET = { male: "mens", female: "womens" };
 
 const SECTIONS = [
   { key: "appearance", label: "Appearance" },
@@ -149,21 +128,74 @@ export default function CustomerSettings() {
   const [theme, setTheme] = useState("dark");
   const [activeSection, setActiveSection] = useState("appearance");
 
+  const supabase = createClient();
+  const [customerId, setCustomerId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+
   // Address book state
-  const [addresses, setAddresses] = useState(SEED_ADDRESSES);
+  const [addresses, setAddresses] = useState([]);
   const [editingAddressId, setEditingAddressId] = useState(null);
   const [addressDraft, setAddressDraft] = useState(newAddressDraft());
 
   // Contacts state
-  const [contacts, setContacts] = useState(SEED_CONTACTS);
+  const [contacts, setContacts] = useState([]);
   const [editingContactId, setEditingContactId] = useState(null);
   const [contactDraft, setContactDraft] = useState(newContactDraft());
 
   // Measurements state
-  const [gender, setGender] = useState(SEED_MEASUREMENTS.gender);
-  const [unit, setUnit] = useState(SEED_MEASUREMENTS.unit);
-  const [vals, setVals] = useState(SEED_MEASUREMENTS.vals);
+  const [gender, setGender] = useState("female");
+  const [unit, setUnit] = useState("in");
+  const [vals, setVals] = useState({});
   const [savedMeasurements, setSavedMeasurements] = useState(false);
+  const [hasMeasurementProfile, setHasMeasurementProfile] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setCustomerId(user.id);
+
+      const [addressResult, contactResult, measurementResult] = await Promise.all([
+        supabase.from("shipping_addresses").select("*").eq("customer_id", user.id).order("created_at"),
+        supabase.from("customer_contacts").select("*").eq("customer_id", user.id).order("created_at"),
+        supabase.from("measurement_profiles").select("*").eq("customer_id", user.id).maybeSingle(),
+      ]);
+
+      if (addressResult.error || contactResult.error || measurementResult.error) {
+        setLoadError(
+          (addressResult.error || contactResult.error || measurementResult.error).message
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      setAddresses((addressResult.data || []).map(mapAddress));
+      setContacts((contactResult.data || []).map(mapContact));
+
+      if (measurementResult.data) {
+        const profile = measurementResult.data;
+        const uiGender = GENDER_SET_TO_UI[profile.gender_set] || "female";
+        const displayUnit = profile.preferred_unit || "in";
+        const displayVals = {};
+        for (const [fieldId, cmValue] of Object.entries(profile.values_cm || {})) {
+          displayVals[fieldId] = fieldId === "shoe_size" ? cmValue : convert(cmValue, "cm", displayUnit);
+        }
+        setGender(uiGender);
+        setUnit(displayUnit);
+        setVals(displayVals);
+        setHasMeasurementProfile(true);
+      }
+
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
   const fields = gender === "male" ? MALE_FIELDS : FEMALE_FIELDS;
@@ -177,34 +209,80 @@ export default function CustomerSettings() {
     setAddressDraft({ ...addr });
     setEditingAddressId(addr.id);
   };
-  const saveAddressDraft = () => {
+  const saveAddressDraft = async () => {
     if (!addressDraft.label.trim() || !addressDraft.line1.trim() || !addressDraft.city.trim()) return;
+    setActionError("");
+
+    const payload = {
+      label: addressDraft.label,
+      line1: addressDraft.line1,
+      line2: addressDraft.line2 || null,
+      city: addressDraft.city,
+      state: addressDraft.state,
+      zip: addressDraft.zip,
+      country: addressDraft.country,
+      care_of_contact_id: addressDraft.careOfContactId || null,
+    };
+
     if (editingAddressId === "new") {
-      setAddresses((a) => [
-        ...a,
-        { id: `addr_${Date.now()}`, ...addressDraft, isDefault: a.length === 0 },
-      ]);
+      const { data, error } = await supabase
+        .from("shipping_addresses")
+        .insert({ ...payload, customer_id: customerId, is_default: addresses.length === 0 })
+        .select()
+        .single();
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
+      setAddresses((a) => [...a, mapAddress(data)]);
     } else {
+      const { error } = await supabase
+        .from("shipping_addresses")
+        .update(payload)
+        .eq("id", editingAddressId);
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
       setAddresses((a) =>
-        a.map((addr) =>
-          addr.id === editingAddressId
-            ? { ...addressDraft, id: addr.id, isDefault: addr.isDefault }
-            : addr
-        )
+        a.map((addr) => (addr.id === editingAddressId ? { ...addr, ...addressDraft } : addr))
       );
     }
     setEditingAddressId(null);
   };
-  const deleteAddress = (id) => {
-    setAddresses((a) => {
-      const remaining = a.filter((addr) => addr.id !== id);
-      if (a.find((addr) => addr.id === id)?.isDefault && remaining.length > 0) {
-        remaining[0] = { ...remaining[0], isDefault: true };
-      }
-      return remaining;
-    });
+  const deleteAddress = async (id) => {
+    setActionError("");
+    const wasDefault = addresses.find((addr) => addr.id === id)?.isDefault;
+    const { error } = await supabase.from("shipping_addresses").delete().eq("id", id);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    const remaining = addresses.filter((addr) => addr.id !== id);
+    if (wasDefault && remaining.length > 0) {
+      await makeDefault(remaining[0].id);
+      return;
+    }
+    setAddresses(remaining);
   };
-  const makeDefault = (id) => {
+  const makeDefault = async (id) => {
+    setActionError("");
+    // Partial unique index means only one row can have is_default = true at
+    // a time - clear the rest first so the new default's insert doesn't
+    // collide with it.
+    const { error: clearError } = await supabase
+      .from("shipping_addresses")
+      .update({ is_default: false })
+      .eq("customer_id", customerId);
+    if (clearError) {
+      setActionError(clearError.message);
+      return;
+    }
+    const { error } = await supabase.from("shipping_addresses").update({ is_default: true }).eq("id", id);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setAddresses((a) => a.map((addr) => ({ ...addr, isDefault: addr.id === id })));
   };
 
@@ -217,25 +295,71 @@ export default function CustomerSettings() {
     setContactDraft({ ...c });
     setEditingContactId(c.id);
   };
-  const saveContactDraft = () => {
+  const saveContactDraft = async () => {
     if (!contactDraft.firstName.trim() || !contactDraft.lastName.trim()) return;
+    setActionError("");
+
+    const payload = {
+      role: contactDraft.role,
+      first_name: contactDraft.firstName,
+      last_name: contactDraft.lastName,
+      phone: contactDraft.phone || null,
+      email: contactDraft.email || null,
+      is_authorized_personnel: contactDraft.isAuthorizedPersonnel,
+      is_approved_for_brand_view: contactDraft.isApprovedForBrandView,
+    };
+
     if (editingContactId === "new") {
-      setContacts((cs) => [...cs, { id: `contact_${Date.now()}`, ...contactDraft }]);
+      const { data, error } = await supabase
+        .from("customer_contacts")
+        .insert({ ...payload, customer_id: customerId })
+        .select()
+        .single();
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
+      setContacts((cs) => [...cs, mapContact(data)]);
     } else {
+      const { error } = await supabase
+        .from("customer_contacts")
+        .update(payload)
+        .eq("id", editingContactId);
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
       setContacts((cs) =>
         cs.map((c) => (c.id === editingContactId ? { ...contactDraft, id: c.id } : c))
       );
     }
     setEditingContactId(null);
   };
-  const deleteContact = (id) => {
+  const deleteContact = async (id) => {
+    setActionError("");
+    // on delete set null on shipping_addresses.care_of_contact_id handles
+    // clearing any address that had this contact as its C/O server-side;
+    // just mirror it in local state too.
+    const { error } = await supabase.from("customer_contacts").delete().eq("id", id);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setContacts((cs) => cs.filter((c) => c.id !== id));
-    // Clear any address that had this contact as its C/O.
     setAddresses((a) =>
       a.map((addr) => (addr.careOfContactId === id ? { ...addr, careOfContactId: null } : addr))
     );
   };
-  const setAddressCareOf = (addressId, contactId) => {
+  const setAddressCareOf = async (addressId, contactId) => {
+    setActionError("");
+    const { error } = await supabase
+      .from("shipping_addresses")
+      .update({ care_of_contact_id: contactId || null })
+      .eq("id", addressId);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setAddresses((a) =>
       a.map((addr) =>
         addr.id === addressId ? { ...addr, careOfContactId: contactId || null } : addr
@@ -265,6 +389,29 @@ export default function CustomerSettings() {
   const setField = (id, value) => {
     setVals((v) => ({ ...v, [id]: value }));
     setSavedMeasurements(false);
+  };
+  const saveMeasurements = async () => {
+    setActionError("");
+    const valuesCm = {};
+    for (const f of fields) {
+      valuesCm[f.id] =
+        f.id === "shoe_size" ? vals[f.id] ?? null : convert(vals[f.id], unit, "cm") ?? null;
+    }
+    const { error } = await supabase.from("measurement_profiles").upsert(
+      {
+        customer_id: customerId,
+        gender_set: UI_TO_GENDER_SET[gender],
+        preferred_unit: unit,
+        values_cm: valuesCm,
+      },
+      { onConflict: "customer_id" }
+    );
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    setHasMeasurementProfile(true);
+    setSavedMeasurements(true);
   };
 
   const labelStyle = {
@@ -321,6 +468,28 @@ export default function CustomerSettings() {
             Settings
           </h1>
         </div>
+
+        {(loadError || actionError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {loadError || actionError}
+          </div>
+        )}
+
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "32px 0", fontSize: 13, color: t.textSecondary }}>
+            Loading…
+          </div>
+        )}
 
         {/* Section tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
@@ -726,7 +895,7 @@ export default function CustomerSettings() {
             </div>
 
             <button
-              onClick={() => setSavedMeasurements(true)}
+              onClick={saveMeasurements}
               style={{
                 width: "100%",
                 padding: "12px 0",
@@ -1204,10 +1373,6 @@ export default function CustomerSettings() {
           </div>
         </div>
       )}
-
-      <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only, no live backend connection.
-      </p>
     </div>
   );
 }

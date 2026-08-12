@@ -1,4 +1,4 @@
-import CustomerSettings from "@/components/mock/CustomerSettings";
+import CustomerSettings from "@/components/CustomerSettings";
 
 export default function Page() {
   return <CustomerSettings />;
