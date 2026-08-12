@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
   dark: {
@@ -22,85 +23,29 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock saved items — illustrative continuity with the swipe deck's seed pool.
-// Deliberately spans multiple brands, to demonstrate brand-scoped grouping
-// (invoices are always brand-scoped, per the original spec — Section 7).
-const SEED_SAVED = [
-  {
-    id: "p_001",
-    name: "Peak Lapel Tuxedo",
-    brandName: "Atelier Noir",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 4800,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    variants: [
-      { size: "40R", stockQuantity: 6 },
-      { size: "42R", stockQuantity: 2 },
-    ],
-  },
-  {
-    id: "p_006",
-    name: "One-of-One Embroidered Jacket",
-    brandName: "Atelier Noir",
-    category: "Custom",
-    itemType: "gift",
-    costPrice: 1200,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: true,
-    deliveryWindow: "3–4 weeks",
-    variants: [{ size: "One size, tailored to fit", stockQuantity: null }],
-  },
-  {
-    id: "p_002",
-    name: "Wool Travel Blazer",
-    brandName: "Halden & Vance",
-    category: "Business",
-    itemType: "purchase",
-    costPrice: 310,
-    price: 890,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    variants: [
-      { size: "S", stockQuantity: 14 },
-      { size: "M", stockQuantity: 9 },
-    ],
-  },
-  {
-    id: "p_004",
-    name: "Classic Leather Derby",
-    brandName: "Halden & Vance",
-    category: "Footwear",
-    itemType: "purchase",
-    costPrice: 85,
-    price: 260,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    variants: [
-      { size: "9", stockQuantity: 5 },
-      { size: "9.5", stockQuantity: 3 },
-    ],
-  },
-  {
-    id: "p_003",
-    name: "Bespoke Evening Gown",
-    brandName: "Roux Studio",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 6200,
-    price: null,
-    currency: "EUR",
-    isMadeToOrder: true,
-    deliveryWindow: "5–7 weeks",
-    variants: [{ size: "Custom fit", stockQuantity: null }],
-  },
-];
+// Maps a Supabase saved_items row (joined with its product and the
+// product's brand) onto the camelCase shape the render logic below
+// already expects. Variants aren't rendered anywhere in this screen (no
+// size chips in the mock), so unlike ProductCatalogue/SwipeDeck this
+// doesn't need product_variants at all.
+function mapSavedItem(row) {
+  const p = row.products;
+  if (!p) return null; // product no longer visible under RLS (e.g. access revoked)
+  return {
+    savedItemId: row.id,
+    id: p.id,
+    name: p.name,
+    brandName: p.brands?.brand_name ?? "",
+    category: p.category,
+    itemType: p.item_type,
+    costPrice: p.cost_price,
+    price: p.price,
+    currency: p.currency,
+    isMadeToOrder: p.is_made_to_order,
+    deliveryWindow: p.delivery_window,
+    heroImage: p.images?.[p.hero_image_index] ?? p.images?.[0] ?? null,
+  };
+}
 
 function formatPrice(amount, currency) {
   if (amount == null) return null;
@@ -118,12 +63,43 @@ function groupByBrand(items) {
 }
 
 export default function SavedGallery() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [savedItems, setSavedItems] = useState(SEED_SAVED);
+  const [savedItems, setSavedItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [removeConfirmId, setRemoveConfirmId] = useState(null);
   const [showMovePlaceholder, setShowMovePlaceholder] = useState(false);
   const [toast, setToast] = useState(null);
+  const [customerId, setCustomerId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setCustomerId(user.id);
+
+      const { data, error } = await supabase
+        .from("saved_items")
+        .select("id, products(*, brands(brand_name))")
+        .eq("customer_id", user.id)
+        .order("liked_at", { ascending: false });
+
+      if (error) {
+        setLoadError(error.message);
+      } else {
+        setSavedItems((data || []).map(mapSavedItem).filter(Boolean));
+      }
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
   const grouped = groupByBrand(savedItems);
@@ -150,11 +126,20 @@ export default function SavedGallery() {
     );
   };
 
-  const handleRemove = (id) => {
+  const handleRemove = async (id) => {
     setSavedItems((items) => items.filter((i) => i.id !== id));
     setSelectedIds((ids) => ids.filter((i) => i !== id));
     setRemoveConfirmId(null);
     showToast("Removed from saved");
+
+    if (customerId) {
+      const { error } = await supabase
+        .from("saved_items")
+        .delete()
+        .eq("customer_id", customerId)
+        .eq("product_id", id);
+      if (error) console.error("Failed to remove saved item:", error.message);
+    }
   };
 
   const handleMoveToReview = () => {
@@ -295,7 +280,29 @@ export default function SavedGallery() {
           </p>
         </div>
 
-        {savedItems.length === 0 && (
+        {loadError && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 18,
+            }}
+          >
+            {loadError}
+          </div>
+        )}
+
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "40px 0", fontSize: 13, color: t.textSecondary }}>
+            Loading saved items…
+          </div>
+        )}
+
+        {!isLoading && savedItems.length === 0 && (
           <div
             style={{
               border: `1px dashed ${t.border}`,
@@ -393,6 +400,9 @@ export default function SavedGallery() {
                           height: 46,
                           borderRadius: 8,
                           background: t.surfaceRaised,
+                          backgroundImage: item.heroImage ? `url(${item.heroImage})` : "none",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
                           flexShrink: 0,
                           display: "flex",
                           alignItems: "center",
@@ -401,7 +411,7 @@ export default function SavedGallery() {
                           color: t.textSecondary,
                         }}
                       >
-                        IMG
+                        {!item.heroImage && "IMG"}
                       </div>
 
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -576,8 +586,8 @@ export default function SavedGallery() {
       )}
 
       <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 14, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only. Selecting multiple brands will split into separate
-        invoices per brand once Review & Submit exists.
+        Selecting multiple brands will split into separate invoices per brand once Review &amp;
+        Submit exists.
       </p>
     </div>
   );

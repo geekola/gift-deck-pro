@@ -1,4 +1,4 @@
-import SavedGallery from "@/components/mock/SavedGallery";
+import SavedGallery from "@/components/SavedGallery";
 
 export default function Page() {
   return <SavedGallery />;
