@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -25,51 +26,33 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock pending applications — illustrative only, not real brand data
-const SEED_APPLICATIONS = [
-  {
-    id: "brand_app_001",
-    brandName: "Atelier Noir",
-    email: "admin@ateliernoir.com",
-    contactFirstName: "Claire",
-    contactLastName: "Dubois",
-    phoneNumber: "+1 (212) 555-0148",
-    website: "https://ateliernoir.com",
-    fulfilmentEmail: "orders@ateliernoir.com",
-    category: "Formal",
-    registeredAt: "2026-06-21T16:04:00Z",
-    status: "pending",
-    notes: [],
-  },
-  {
-    id: "brand_app_002",
-    brandName: "Halden & Vance",
-    email: "ops@haldenvance.com",
-    contactFirstName: "Marcus",
-    contactLastName: "Vance",
-    phoneNumber: "+1 (310) 555-0173",
-    website: "https://haldenvance.com",
-    fulfilmentEmail: "fulfilment@haldenvance.com",
-    category: "Casual",
-    registeredAt: "2026-06-22T09:31:00Z",
-    status: "pending",
-    notes: [],
-  },
-  {
-    id: "brand_app_003",
-    brandName: "Roux Studio",
-    email: "hello@rouxstudio.co",
-    contactFirstName: "Inès",
-    contactLastName: "Roux",
-    phoneNumber: "+1 (646) 555-0119",
-    website: "https://rouxstudio.co",
-    fulfilmentEmail: "hello@rouxstudio.co",
-    category: "Business",
-    registeredAt: "2026-06-23T13:52:00Z",
-    status: "pending",
-    notes: [],
-  },
-];
+// Maps a Supabase brands row (joined with brand_application_notes) onto
+// the camelCase shape the render logic below already expects. Notes
+// don't carry a resolved admin display name - created_by is a profile
+// id with no name/email on profiles itself (see migration 0004), and
+// resolving it would need a security-definer lookup into auth.users.
+// Not worth it for what's currently a single-admin workflow.
+function mapApplication(row) {
+  return {
+    id: row.id,
+    brandName: row.brand_name,
+    email: row.email,
+    contactFirstName: row.contact_first_name,
+    contactLastName: row.contact_last_name,
+    phoneNumber: row.phone_number,
+    website: row.website,
+    fulfilmentEmail: row.fulfilment_email,
+    category: row.category,
+    registeredAt: row.created_at,
+    status: row.status,
+    rejectionReason: row.rejection_reason,
+    reviewedAt: row.status === "pending" ? null : row.updated_at,
+    notes: (row.brand_application_notes || [])
+      .slice()
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map((n) => ({ id: n.id, text: n.note, at: n.created_at })),
+  };
+}
 
 function formatDate(iso) {
   const d = new Date(iso);
@@ -77,15 +60,40 @@ function formatDate(iso) {
 }
 
 export default function PlatformAdminReviewQueue() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [applications, setApplications] = useState(SEED_APPLICATIONS);
-  const [selectedId, setSelectedId] = useState(SEED_APPLICATIONS[0].id);
+  const [applications, setApplications] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
   const [filter, setFilter] = useState("pending");
   const [newNote, setNewNote] = useState("");
   const [noteError, setNoteError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+
+  const loadApplications = async () => {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("*, brand_application_notes(*)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      const mapped = (data || []).map(mapApplication);
+      setApplications(mapped);
+      setSelectedId((current) => current ?? mapped[0]?.id ?? null);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadApplications();
+  }, []);
 
   const t = tokens[theme];
   const selected = applications.find((a) => a.id === selectedId) || null;
@@ -96,72 +104,68 @@ export default function PlatformAdminReviewQueue() {
 
   const pendingCount = applications.filter((a) => a.status === "pending").length;
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selected) return;
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? {
-              ...a,
-              status: "approved",
-              reviewedAt: new Date().toISOString(),
-              reviewedBy: "platform_admin_preview",
-            }
-          : a
-      )
-    );
+    setActionError("");
+    const { error } = await supabase
+      .from("brands")
+      .update({ status: "approved", approved_at: new Date().toISOString() })
+      .eq("id", selected.id);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setRejectMode(false);
     setRejectReason("");
+    await loadApplications();
   };
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (!rejectReason.trim()) {
       setRejectError("A rejection reason is required before this can be submitted.");
       return;
     }
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? {
-              ...a,
-              status: "rejected",
-              reviewedAt: new Date().toISOString(),
-              reviewedBy: "platform_admin_preview",
-              rejectionReason: rejectReason.trim(),
-            }
-          : a
-      )
-    );
+    setActionError("");
+    const { error } = await supabase
+      .from("brands")
+      .update({ status: "rejected", rejection_reason: rejectReason.trim() })
+      .eq("id", selected.id);
+
+    if (error) {
+      setRejectError(error.message);
+      return;
+    }
     setRejectMode(false);
     setRejectReason("");
     setRejectError("");
+    await loadApplications();
   };
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.trim()) {
       setNoteError("Enter a note before adding it.");
       return;
     }
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? {
-              ...a,
-              notes: [
-                ...(a.notes || []),
-                {
-                  id: `note_${Date.now()}`,
-                  text: newNote.trim(),
-                  by: "platform_admin_preview",
-                  at: new Date().toISOString(),
-                },
-              ],
-            }
-          : a
-      )
-    );
+    setActionError("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase.from("brand_application_notes").insert({
+      brand_id: selected.id,
+      note: newNote.trim(),
+      created_by: user?.id ?? null,
+    });
+
+    if (error) {
+      setNoteError(error.message);
+      return;
+    }
     setNewNote("");
     setNoteError("");
+    await loadApplications();
   };
 
   const formatDateTime = (iso) => {
@@ -294,6 +298,22 @@ export default function PlatformAdminReviewQueue() {
           </p>
         </div>
 
+        {(loadError || actionError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {loadError || actionError}
+          </div>
+        )}
+
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
           {[
@@ -336,12 +356,17 @@ export default function PlatformAdminReviewQueue() {
               overflow: "hidden",
             }}
           >
-            {visibleApplications.length === 0 && (
+            {isLoading && (
+              <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>
+                Loading applications…
+              </div>
+            )}
+            {!isLoading && visibleApplications.length === 0 && (
               <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>
                 No applications in this view.
               </div>
             )}
-            {visibleApplications.map((app, idx) => {
+            {!isLoading && visibleApplications.map((app, idx) => {
               const isSelected = app.id === selectedId;
               return (
                 <div
@@ -731,18 +756,6 @@ export default function PlatformAdminReviewQueue() {
           </div>
         </div>
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-          textAlign: "center",
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }

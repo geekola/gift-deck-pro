@@ -1,0 +1,21 @@
+-- 0011: relax the return-address-before-approval constraint
+--
+-- 0002 added brands_return_address_required_once_approved: a brand row
+-- can't be status = 'approved' unless the return address columns are
+-- already filled in. But the return address is collected in Brand
+-- Settings (BrandCompanySettings.jsx - not yet wired to real data), and
+-- Settings lives behind the brand (protected) route group, which itself
+-- requires status = 'approved' to load (migration from the auth-guard
+-- retrofit). As written, that's a deadlock: nothing can ever get
+-- approved, because nothing can reach the form that satisfies the
+-- precondition for approval.
+--
+-- Decision (Christine): drop the DB-level requirement. Platform admin
+-- approves based on the application alone. Return address collection
+-- moves entirely to the app layer, enforced at the point it actually
+-- matters (e.g. before the brand can list a product or receive a
+-- requisition) once Brand Settings is wired for real - not at
+-- approval time. Tracked as a follow-up in [C] Tasks.md rather than
+-- built now, since BrandCompanySettings.jsx itself is still mock.
+
+alter table brands drop constraint if exists brands_return_address_required_once_approved;
