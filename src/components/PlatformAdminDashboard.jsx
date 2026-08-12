@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -778,10 +780,18 @@ function VipContractsSection({ t }) {
 // SHELL: Platform Admin Dashboard
 // ═══════════════════════════════════════════════════════════════════════
 export default function PlatformAdminDashboard() {
+  const router = useRouter();
+  const supabase = createClient();
   const [theme, setTheme] = useState("dark");
   const [activeSection, setActiveSection] = useState("review_queue");
 
   const t = tokens[theme];
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/platform-admin/login");
+    router.refresh();
+  };
 
   const NAV_ITEMS = [
     { key: "review_queue", label: "Review queue" },
@@ -850,6 +860,24 @@ export default function PlatformAdminDashboard() {
         </div>
 
         <div style={{ flex: 1 }} />
+
+        <button
+          onClick={handleSignOut}
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            color: t.textSecondary,
+            background: "transparent",
+            border: `1px solid ${t.border}`,
+            borderRadius: 6,
+            padding: "7px 10px",
+            cursor: "pointer",
+            fontFamily: "'Roboto', sans-serif",
+            marginBottom: 8,
+          }}
+        >
+          Sign out
+        </button>
 
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
