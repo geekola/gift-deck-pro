@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (shared system, dark-default) ────────────────────────────
 const tokens = {
@@ -24,77 +26,47 @@ const tokens = {
 };
 
 // 5-value category enum — updated this session (Footwear added when
-// designing the bulk upload templates). Mock counts are illustrative only,
-// representing how many cards are currently available to THIS customer in
-// each category, after access-policy/restriction/VIP-unlock filtering —
-// none of that filtering logic lives in this screen, it's just display data.
+// designing the bulk upload templates). Descriptions are static copy;
+// counts are real, fetched below (how many cards are currently
+// available to THIS customer in each category, after
+// access-policy/restriction/VIP-unlock filtering — that filtering
+// happens in Postgres via RLS on the products_customer_select policy,
+// not in this component).
 const CATEGORIES = [
-  { key: "Casual", label: "Casual", desc: "Everyday wear, ready-to-wear sizing.", count: 18 },
-  { key: "Business", label: "Business", desc: "Workwear and travel-friendly pieces.", count: 9 },
-  { key: "Formal", label: "Formal", desc: "Suiting, tuxedos, evening wear.", count: 6 },
-  { key: "Footwear", label: "Footwear", desc: "Shoes, numeric sizing.", count: 11 },
-  { key: "Custom", label: "Custom", desc: "One-off and bespoke pieces.", count: 3 },
+  { key: "Casual", label: "Casual", desc: "Everyday wear, ready-to-wear sizing." },
+  { key: "Business", label: "Business", desc: "Workwear and travel-friendly pieces." },
+  { key: "Formal", label: "Formal", desc: "Suiting, tuxedos, evening wear." },
+  { key: "Footwear", label: "Footwear", desc: "Shoes, numeric sizing." },
+  { key: "Custom", label: "Custom", desc: "One-off and bespoke pieces." },
 ];
 
 export default function CategorySelector() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
   const [selected, setSelected] = useState(null);
-  const [enteredDeck, setEnteredDeck] = useState(false);
+  const [counts, setCounts] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      // RLS (products_customer_select) already restricts this to
+      // approved-access, non-restricted brands - no filtering needed here.
+      const { data, error } = await supabase.from("products").select("category");
+      if (!error && data) {
+        const tally = {};
+        for (const row of data) {
+          tally[row.category] = (tally[row.category] || 0) + 1;
+        }
+        setCounts(tally);
+      }
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
   const selectedCategory = CATEGORIES.find((c) => c.key === selected);
-
-  if (enteredDeck && selectedCategory) {
-    return (
-      <div
-        style={{
-          fontFamily: "'Roboto', sans-serif",
-          background: t.bgBase,
-          minHeight: 640,
-          padding: "28px 16px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          transition: "background 0.2s ease",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 400, textAlign: "center", paddingTop: 60 }}>
-          <div
-            style={{
-              width: 28,
-              height: 3,
-              background: tokens.gold,
-              borderRadius: 2,
-              margin: "0 auto 18px auto",
-            }}
-          />
-          <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 8px 0" }}>
-            {selectedCategory.label} deck
-          </h1>
-          <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 24px 0", lineHeight: 1.6 }}>
-            The swipe deck itself is the next screen to build — this is a placeholder confirming
-            the right category carried through.
-          </p>
-          <button
-            onClick={() => setEnteredDeck(false)}
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: t.textSecondary,
-              background: "transparent",
-              border: `1px solid ${t.border}`,
-              borderRadius: 8,
-              padding: "9px 16px",
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-          >
-            ← Back to categories
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -197,7 +169,7 @@ export default function CategorySelector() {
                     marginLeft: 12,
                   }}
                 >
-                  {cat.count} pieces
+                  {isLoading ? "…" : `${counts[cat.key] || 0} pieces`}
                 </span>
               </div>
             );
@@ -206,7 +178,7 @@ export default function CategorySelector() {
 
         <button
           disabled={!selected}
-          onClick={() => setEnteredDeck(true)}
+          onClick={() => router.push(`/customer/deck?category=${encodeURIComponent(selected)}`)}
           style={{
             width: "100%",
             padding: "13px 0",
@@ -224,11 +196,6 @@ export default function CategorySelector() {
           {selected ? `Enter ${selectedCategory.label} deck` : "Select a category to continue"}
         </button>
       </div>
-
-      <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only, no live backend connection. Card counts shown are
-        illustrative, post-access-filtering placeholders.
-      </p>
     </div>
   );
 }

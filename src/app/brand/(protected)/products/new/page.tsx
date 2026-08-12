@@ -1,4 +1,4 @@
-import ProductForm from "@/components/mock/ProductForm";
+import ProductForm from "@/components/ProductForm";
 
 export default function Page() {
   return <ProductForm />;

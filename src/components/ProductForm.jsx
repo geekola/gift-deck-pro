@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -87,11 +89,20 @@ function validate(form, erpSyncEnabled) {
 }
 
 export default function ProductForm() {
+  const router = useRouter();
+  const supabase = createClient();
+  const fileInputRef = useRef(null);
+
   const [theme, setTheme] = useState("dark");
-  const [erpSyncEnabled, setErpSyncEnabled] = useState(false); // toggle to preview the ERP-pending stock state
+  const [erpSyncEnabled, setErpSyncEnabled] = useState(false); // per-product products.erp_synced
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [brandId, setBrandId] = useState(null);
+  const [loadError, setLoadError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -111,6 +122,29 @@ export default function ProductForm() {
 
   const t = tokens[theme];
 
+  // ProductForm only ever renders inside the brand (protected) route
+  // group, so a session + approved brand_user is guaranteed by the
+  // layout guard - this just needs the brand_id to write products
+  // against and to scope the storage upload path.
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("brand_id")
+        .eq("id", user.id)
+        .single();
+      if (error || !profile?.brand_id) {
+        setLoadError("Couldn't load your brand account. Try refreshing.");
+        return;
+      }
+      setBrandId(profile.brand_id);
+    })();
+  }, []);
+
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const markTouched = (key) => setTouched((tt) => ({ ...tt, [key]: true }));
 
@@ -129,9 +163,32 @@ export default function ProductForm() {
     setForm((f) => ({ ...f, variants: f.variants.filter((v) => v.id !== id) }));
   };
 
-  const handleAddMockImage = () => {
-    if (form.images.length >= 3) return;
-    setForm((f) => ({ ...f, images: [...f.images, `mock_image_${f.images.length + 1}`] }));
+  const handleFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file || form.images.length >= 3 || !brandId) return;
+
+    setIsUploading(true);
+    setSubmitError("");
+    const ext = file.name.split(".").pop();
+    const path = `${brandId}/${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(path, file);
+
+    if (uploadError) {
+      setIsUploading(false);
+      setSubmitError(`Image upload failed: ${uploadError.message}`);
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("product-images").getPublicUrl(path);
+
+    setIsUploading(false);
+    setForm((f) => ({ ...f, images: [...f.images, publicUrl] }));
   };
 
   const removeImage = (idx) => {
@@ -144,7 +201,7 @@ export default function ProductForm() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const allErrors = validate(form, erpSyncEnabled);
     setErrors(allErrors);
@@ -158,9 +215,67 @@ export default function ProductForm() {
       deliveryWindow: true,
       images: true,
     });
-    if (Object.keys(allErrors).length === 0) {
-      setSubmitted(true);
+    if (Object.keys(allErrors).length > 0) return;
+
+    if (!brandId) {
+      setSubmitError("Couldn't load your brand account. Try refreshing.");
+      return;
     }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .insert({
+        brand_id: brandId,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        item_type: form.itemType,
+        cost_price: Number(form.costPrice),
+        price: form.itemType === "purchase" ? Number(form.price) : null,
+        currency: form.currency,
+        is_made_to_order: form.isMadeToOrder,
+        delivery_window: form.isMadeToOrder ? form.deliveryWindow.trim() : null,
+        return_policy: form.itemType === "purchase" ? form.returnPolicy.trim() : null,
+        images: form.images,
+        hero_image_index: form.heroImageIndex,
+        erp_synced: erpSyncEnabled,
+      })
+      .select("id")
+      .single();
+
+    if (productError || !product) {
+      setIsSubmitting(false);
+      setSubmitError(productError?.message || "Couldn't save the product.");
+      return;
+    }
+
+    const variantRows = form.variants.map((v) => ({
+      product_id: product.id,
+      size: v.size.trim(),
+      stock_quantity:
+        form.isMadeToOrder || erpSyncEnabled || v.stockQuantity === ""
+          ? null
+          : Number(v.stockQuantity),
+      low_stock_threshold: v.lowStockThreshold === "" ? null : Number(v.lowStockThreshold),
+    }));
+
+    const { error: variantError } = await supabase.from("product_variants").insert(variantRows);
+
+    setIsSubmitting(false);
+
+    if (variantError) {
+      // Product row exists but variants failed - surface it rather than
+      // silently leaving a sizeless product in the catalogue. Not rolled
+      // back automatically (no transaction across two REST calls); the
+      // brand can delete/retry from the catalogue.
+      setSubmitError(`Product saved, but sizes failed to save: ${variantError.message}`);
+      return;
+    }
+
+    setSubmitted(true);
   };
 
   const labelStyle = {
@@ -231,24 +346,62 @@ export default function ProductForm() {
             Product saved
           </h1>
           <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 22px 0" }}>
-            "{form.name}" passed all validation and would now be written to the catalogue.
+            "{form.name}" was added to your catalogue.
           </p>
-          <button
-            onClick={() => setSubmitted(false)}
-            style={{
-              fontSize: 13,
-              fontWeight: 500,
-              color: "#0F0F0F",
-              background: tokens.gold,
-              border: "none",
-              borderRadius: 8,
-              padding: "10px 18px",
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-          >
-            Back to form
-          </button>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button
+              onClick={() => router.push("/brand/products")}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#0F0F0F",
+                background: tokens.gold,
+                border: "none",
+                borderRadius: 8,
+                padding: "10px 18px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+              }}
+            >
+              Back to catalogue
+            </button>
+            <button
+              onClick={() => {
+                setForm({
+                  name: "",
+                  description: "",
+                  category: "",
+                  itemType: "gift",
+                  costPrice: "",
+                  price: "",
+                  currency: "USD",
+                  returnPolicy: "",
+                  isMadeToOrder: false,
+                  deliveryWindow: "",
+                  images: [],
+                  heroImageIndex: 0,
+                  variants: [newVariant()],
+                });
+                setErrors({});
+                setTouched({});
+                setErpSyncEnabled(false);
+                setSubmitted(false);
+              }}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: t.textSecondary,
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 8,
+                padding: "10px 18px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+              }}
+            >
+              Add another
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -305,9 +458,9 @@ export default function ProductForm() {
               cursor: "pointer",
               fontFamily: "'Roboto', sans-serif",
             }}
-            title="Preview-only toggle — simulates this brand having ERP stock sync enabled"
+            title="Stock for this item is mirrored from an external ERP instead of tracked manually — stock quantity fields become read-only"
           >
-            {erpSyncEnabled ? "Preview: ERP-synced brand" : "Preview: no ERP"}
+            {erpSyncEnabled ? "ERP-synced item" : "Manual stock"}
           </button>
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -346,6 +499,22 @@ export default function ProductForm() {
             All fields enforce the current schema rules live as you fill them in.
           </p>
         </div>
+
+        {(loadError || submitError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 18,
+            }}
+          >
+            {loadError || submitError}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           {/* ── Basic info ── */}
@@ -666,16 +835,31 @@ export default function ProductForm() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
+                    justifyContent: "flex-end",
                     fontSize: 10,
                     color: t.textSecondary,
                     cursor: "pointer",
                     position: "relative",
+                    overflow: "hidden",
+                    backgroundImage: `url(${img})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                   }}
                 >
-                  IMG {idx + 1}
                   {idx === form.heroImageIndex && (
-                    <span style={{ fontSize: 9, color: tokens.gold, marginTop: 3 }}>HERO</span>
+                    <span
+                      style={{
+                        fontSize: 9,
+                        fontWeight: 500,
+                        color: "#0F0F0F",
+                        background: tokens.gold,
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                        marginBottom: 4,
+                      }}
+                    >
+                      HERO
+                    </span>
                   )}
                   <button
                     type="button"
@@ -703,26 +887,38 @@ export default function ProductForm() {
                 </div>
               ))}
               {form.images.length < 3 && (
-                <button
-                  type="button"
-                  onClick={handleAddMockImage}
-                  style={{
-                    width: 76,
-                    height: 76,
-                    borderRadius: 8,
-                    background: "transparent",
-                    border: `1px dashed ${t.border}`,
-                    color: t.textSecondary,
-                    fontSize: 22,
-                    cursor: "pointer",
-                  }}
-                >
-                  +
-                </button>
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleFileSelected}
+                    disabled={isUploading || !brandId}
+                    style={{ display: "none" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading || !brandId}
+                    style={{
+                      width: 76,
+                      height: 76,
+                      borderRadius: 8,
+                      background: "transparent",
+                      border: `1px dashed ${t.border}`,
+                      color: t.textSecondary,
+                      fontSize: isUploading ? 11 : 22,
+                      cursor: isUploading || !brandId ? "default" : "pointer",
+                      opacity: isUploading || !brandId ? 0.6 : 1,
+                    }}
+                  >
+                    {isUploading ? "Uploading…" : "+"}
+                  </button>
+                </>
               )}
             </div>
             <p style={{ fontSize: 11.5, color: t.textSecondary, margin: 0 }}>
-              Click a thumbnail to set it as the hero image. Max 3, no override path.
+              Click a thumbnail to set it as the hero image. Max 3, 5MB each (PNG, JPEG, WebP).
             </p>
             {touched.images && errors.images && (
               <p style={{ fontSize: 12, color: "#E27A7A", margin: "6px 0 0 0" }}>
@@ -889,6 +1085,7 @@ export default function ProductForm() {
 
           <button
             type="submit"
+            disabled={isSubmitting || isUploading || !brandId}
             style={{
               width: "100%",
               padding: "13px 0",
@@ -899,25 +1096,14 @@ export default function ProductForm() {
               background: tokens.gold,
               border: "none",
               borderRadius: 8,
-              cursor: "pointer",
+              cursor: isSubmitting || isUploading || !brandId ? "default" : "pointer",
+              opacity: isSubmitting || isUploading || !brandId ? 0.7 : 1,
             }}
           >
-            Save product
+            {isSubmitting ? "Saving…" : "Save product"}
           </button>
         </form>
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-          textAlign: "center",
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }

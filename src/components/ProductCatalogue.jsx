@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -25,75 +27,29 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock catalogue — illustrative only, deliberately spans the real schema variety:
-// in-stock, low-stock, made-to-order (no stock concept), and ERP-synced (read-only mirror).
-const SEED_PRODUCTS = [
-  {
-    id: "p_001",
-    name: "Peak Lapel Tuxedo",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 4800,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    erpSynced: false,
-    variants: [
-      { id: "v_001a", size: "40R", stockQuantity: 6, lowStockThreshold: 3 },
-      { id: "v_001b", size: "42R", stockQuantity: 2, lowStockThreshold: 3 },
-      { id: "v_001c", size: "42L", stockQuantity: 0, lowStockThreshold: 3 },
-    ],
-  },
-  {
-    id: "p_002",
-    name: "Wool Travel Blazer",
-    category: "Business",
-    itemType: "purchase",
-    costPrice: 310,
-    price: 890,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    erpSynced: true,
-    variants: [
-      { id: "v_002a", size: "S", stockQuantity: 14, lowStockThreshold: 5 },
-      { id: "v_002b", size: "M", stockQuantity: 9, lowStockThreshold: 5 },
-      { id: "v_002c", size: "L", stockQuantity: 3, lowStockThreshold: 5 },
-    ],
-  },
-  {
-    id: "p_003",
-    name: "Bespoke Evening Gown",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 6200,
-    price: null,
-    currency: "EUR",
-    isMadeToOrder: true,
-    deliveryWindow: "5–7 weeks",
-    erpSynced: false,
-    variants: [
-      { id: "v_003a", size: "Custom fit", stockQuantity: null, lowStockThreshold: null },
-    ],
-  },
-  {
-    id: "p_004",
-    name: "Relaxed Linen Shirt",
-    category: "Casual",
-    itemType: "purchase",
-    costPrice: 38,
-    price: 145,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    erpSynced: false,
-    variants: [
-      { id: "v_004a", size: "S", stockQuantity: 0, lowStockThreshold: 4 },
-      { id: "v_004b", size: "M", stockQuantity: 0, lowStockThreshold: 4 },
-    ],
-  },
-];
+// Maps a Supabase products row (snake_case, nested product_variants) onto
+// the camelCase shape the render logic below already expects.
+function mapProduct(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    itemType: row.item_type,
+    costPrice: row.cost_price,
+    price: row.price,
+    currency: row.currency,
+    isMadeToOrder: row.is_made_to_order,
+    deliveryWindow: row.delivery_window,
+    erpSynced: row.erp_synced,
+    heroImage: row.images?.[row.hero_image_index] ?? row.images?.[0] ?? null,
+    variants: (row.product_variants || []).map((v) => ({
+      id: v.id,
+      size: v.size,
+      stockQuantity: v.stock_quantity,
+      lowStockThreshold: v.low_stock_threshold,
+    })),
+  };
+}
 
 function deriveActive(product) {
   // Product.active is derived — true if at least one variant has stock,
@@ -109,13 +65,53 @@ function formatPrice(amount, currency) {
 }
 
 export default function ProductCatalogue() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("brand_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.brand_id) {
+        setLoadError("Couldn't load your brand account. Try refreshing.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, product_variants(*)")
+        .eq("brand_id", profile.brand_id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setLoadError(error.message);
+      } else {
+        setProducts((data || []).map(mapProduct));
+      }
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
 
-  const filtered = SEED_PRODUCTS.filter((p) => {
+  const filtered = products.filter((p) => {
     if (filter === "all") return true;
     if (filter === "active") return deriveActive(p);
     if (filter === "inactive") return !deriveActive(p);
@@ -211,10 +207,11 @@ export default function ProductCatalogue() {
               Product catalogue
             </h1>
             <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
-              {filtered.length} of {SEED_PRODUCTS.length} products
+              {filtered.length} of {products.length} products
             </p>
           </div>
           <button
+            onClick={() => router.push("/brand/products/new")}
             style={{
               fontSize: 13,
               fontWeight: 500,
@@ -231,6 +228,22 @@ export default function ProductCatalogue() {
             + Add product
           </button>
         </div>
+
+        {loadError && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 18,
+            }}
+          >
+            {loadError}
+          </div>
+        )}
 
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
@@ -265,7 +278,12 @@ export default function ProductCatalogue() {
 
         {/* Product list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {filtered.map((product) => {
+          {isLoading && (
+            <div style={{ textAlign: "center", padding: "32px 0", fontSize: 13, color: t.textSecondary }}>
+              Loading products…
+            </div>
+          )}
+          {!isLoading && filtered.map((product) => {
             const isActive = deriveActive(product);
             const isExpanded = expandedId === product.id;
             const lowStockVariants = product.variants.filter(
@@ -297,13 +315,16 @@ export default function ProductCatalogue() {
                     cursor: "pointer",
                   }}
                 >
-                  {/* Hero image placeholder */}
+                  {/* Hero image */}
                   <div
                     style={{
                       width: 48,
                       height: 48,
                       borderRadius: 8,
                       background: t.surfaceRaised,
+                      backgroundImage: product.heroImage ? `url(${product.heroImage})` : "none",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                       flexShrink: 0,
                       display: "flex",
                       alignItems: "center",
@@ -313,7 +334,7 @@ export default function ProductCatalogue() {
                       border: `1px solid ${t.border}`,
                     }}
                   >
-                    IMG
+                    {!product.heroImage && "IMG"}
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -507,7 +528,7 @@ export default function ProductCatalogue() {
             );
           })}
 
-          {filtered.length === 0 && (
+          {!isLoading && filtered.length === 0 && (
             <div
               style={{
                 textAlign: "center",
@@ -516,23 +537,11 @@ export default function ProductCatalogue() {
                 color: t.textSecondary,
               }}
             >
-              No products match this filter.
+              {products.length === 0 ? "No products yet — add your first one." : "No products match this filter."}
             </div>
           )}
         </div>
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-          textAlign: "center",
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }

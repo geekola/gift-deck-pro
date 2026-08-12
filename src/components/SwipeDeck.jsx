@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
   dark: {
@@ -22,112 +23,30 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock deck — deliberately spans real schema variety, same as the Brand
-// Portal catalogue: gift vs. purchase, made-to-order, currency, multiple
-// variants. One card per Product, per Decision 3 — size selection happens
-// within the like/select flow, not at the card level.
-const SEED_CARDS = [
-  {
-    id: "p_001",
-    name: "Peak Lapel Tuxedo",
-    brandName: "Atelier Noir",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 4800,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    description: "Classic black peak lapel tuxedo, fully canvassed construction.",
-    variants: [
-      { size: "40R", stockQuantity: 6 },
-      { size: "42R", stockQuantity: 2 },
-      { size: "42L", stockQuantity: 0 },
-    ],
-  },
-  {
-    id: "p_002",
-    name: "Wool Travel Blazer",
-    brandName: "Halden & Vance",
-    category: "Business",
-    itemType: "purchase",
-    costPrice: 310,
-    price: 890,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    description: "Packable wool-blend travel blazer, wrinkle-resistant.",
-    variants: [
-      { size: "S", stockQuantity: 14 },
-      { size: "M", stockQuantity: 9 },
-      { size: "L", stockQuantity: 3 },
-    ],
-  },
-  {
-    id: "p_003",
-    name: "Bespoke Evening Gown",
-    brandName: "Roux Studio",
-    category: "Formal",
-    itemType: "gift",
-    costPrice: 6200,
-    price: null,
-    currency: "EUR",
-    isMadeToOrder: true,
-    deliveryWindow: "5–7 weeks",
-    description: "Made-to-measure evening gown, fully customizable silhouette.",
-    variants: [{ size: "Custom fit", stockQuantity: null }],
-  },
-  {
-    id: "p_004",
-    name: "Classic Leather Derby",
-    brandName: "Halden & Vance",
-    category: "Footwear",
-    itemType: "purchase",
-    costPrice: 85,
-    price: 260,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    description: "Hand-finished leather derby shoe, Goodyear welt construction.",
-    variants: [
-      { size: "9", stockQuantity: 5 },
-      { size: "9.5", stockQuantity: 3 },
-      { size: "10", stockQuantity: 2 },
-    ],
-  },
-  {
-    id: "p_005",
-    name: "Relaxed Linen Shirt",
-    brandName: "Roux Studio",
-    category: "Casual",
-    itemType: "purchase",
-    costPrice: 38,
-    price: 145,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    description: "Lightweight summer linen shirt in natural tone.",
-    variants: [
-      { size: "S", stockQuantity: 4 },
-      { size: "M", stockQuantity: 6 },
-      { size: "L", stockQuantity: 2 },
-    ],
-  },
-  {
-    id: "p_006",
-    name: "One-of-One Embroidered Jacket",
-    brandName: "Atelier Noir",
-    category: "Custom",
-    itemType: "gift",
-    costPrice: 1200,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: true,
-    deliveryWindow: "3–4 weeks",
-    description: "Hand-embroidered, single-edition jacket — no two alike.",
-    variants: [{ size: "One size, tailored to fit", stockQuantity: null }],
-  },
-];
+// Maps a Supabase products row (joined with product_variants and the
+// parent brand's name) onto the camelCase card shape the render logic
+// below already expects. One card per Product, per Decision 3 — size
+// selection happens within the like/select flow, not at the card level.
+function mapCard(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    brandName: row.brands?.brand_name ?? "",
+    category: row.category,
+    itemType: row.item_type,
+    costPrice: row.cost_price,
+    price: row.price,
+    currency: row.currency,
+    isMadeToOrder: row.is_made_to_order,
+    deliveryWindow: row.delivery_window,
+    description: row.description,
+    heroImage: row.images?.[row.hero_image_index] ?? row.images?.[0] ?? null,
+    variants: (row.product_variants || []).map((v) => ({
+      size: v.size,
+      stockQuantity: v.stock_quantity,
+    })),
+  };
+}
 
 const CATEGORIES = ["Casual", "Business", "Formal", "Footwear", "Custom"];
 
@@ -138,6 +57,8 @@ function formatPrice(amount, currency) {
 }
 
 export default function SwipeDeck() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
   const [activeCategory, setActiveCategory] = useState("Formal");
   const [swipedIds, setSwipedIds] = useState([]); // ids removed from any deck via like/pass/undo-tracking
@@ -149,8 +70,48 @@ export default function SwipeDeck() {
   const [showToast, setShowToast] = useState(null);
   const startPos = useRef({ x: 0, y: 0 });
 
+  const [allCards, setAllCards] = useState([]);
+  const [customerId, setCustomerId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  // Reads the category CategorySelector navigated here with (e.g.
+  // /customer/deck?category=Footwear). Read window.location directly
+  // (rather than next/navigation's useSearchParams) so this doesn't need
+  // a Suspense boundary - this component is already 100% client-rendered.
+  useEffect(() => {
+    const cat = new URLSearchParams(window.location.search).get("category");
+    if (cat && CATEGORIES.includes(cat)) {
+      setActiveCategory(cat);
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) setCustomerId(user.id);
+
+      // RLS (products_customer_select) already restricts this to
+      // approved-access, non-restricted brands - fetch the whole
+      // accessible catalogue once and filter by category client-side,
+      // same shape the deck used with SEED_CARDS.
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, product_variants(*), brands(brand_name)");
+
+      if (error) {
+        setLoadError(error.message);
+      } else {
+        setAllCards((data || []).map(mapCard));
+      }
+      setIsLoading(false);
+    })();
+  }, []);
+
   const t = tokens[theme];
-  const cards = SEED_CARDS.filter(
+  const cards = allCards.filter(
     (c) => c.category === activeCategory && !swipedIds.includes(c.id)
   );
   const topCard = cards[0];
@@ -175,6 +136,21 @@ export default function SwipeDeck() {
     setHistory((h) => [...h, { card: topCard, action: "saved" }]);
     showToastMsg("Saved to your gallery");
     advance("right", topCard.id);
+
+    if (customerId) {
+      // Fire-and-forget - the swipe already advanced optimistically, and
+      // (customer_id, product_id) is unique so a duplicate like from an
+      // undo/re-swipe just no-ops instead of erroring.
+      supabase
+        .from("saved_items")
+        .upsert(
+          { customer_id: customerId, product_id: topCard.id },
+          { onConflict: "customer_id,product_id", ignoreDuplicates: true }
+        )
+        .then(({ error }) => {
+          if (error) console.error("Failed to save item:", error.message);
+        });
+    }
   };
 
   const handlePass = () => {
@@ -208,6 +184,17 @@ export default function SwipeDeck() {
     setExitDirection(null);
     setDrag({ x: 0, y: 0, active: false });
     showToastMsg(last.action === "saved" ? "Removed from saved" : "Brought card back");
+
+    if (last.action === "saved" && customerId) {
+      supabase
+        .from("saved_items")
+        .delete()
+        .eq("customer_id", customerId)
+        .eq("product_id", last.card.id)
+        .then(({ error }) => {
+          if (error) console.error("Failed to unsave item:", error.message);
+        });
+    }
   };
 
   const handleCategorySwitch = (cat) => {
@@ -366,7 +353,45 @@ export default function SwipeDeck() {
           position: "relative",
         }}
       >
-        {cards.length === 0 && (
+        {isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: `1px dashed ${t.border}`,
+              borderRadius: 18,
+              fontSize: 13,
+              color: t.textSecondary,
+            }}
+          >
+            Loading deck…
+          </div>
+        )}
+
+        {!isLoading && loadError && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              border: `1px dashed ${t.border}`,
+              borderRadius: 18,
+              fontSize: 13,
+              color: "#E27A7A",
+              padding: 24,
+            }}
+          >
+            {loadError}
+          </div>
+        )}
+
+        {!isLoading && !loadError && cards.length === 0 && (
           <div
             style={{
               position: "absolute",
@@ -399,10 +424,11 @@ export default function SwipeDeck() {
           </div>
         )}
 
-        {cards
-          .slice(0, 3)
-          .reverse()
-          .map((card, idx, arr) => {
+        {!isLoading &&
+          cards
+            .slice(0, 3)
+            .reverse()
+            .map((card, idx, arr) => {
             const isTop = idx === arr.length - 1;
             const stackOffset = arr.length - 1 - idx;
             const priceLabel =
@@ -446,13 +472,16 @@ export default function SwipeDeck() {
                   style={{
                     height: "62%",
                     background: t.surfaceRaised,
+                    backgroundImage: card.heroImage ? `url(${card.heroImage})` : "none",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     position: "relative",
                   }}
                 >
-                  <span style={{ fontSize: 12, color: t.textSecondary }}>IMAGE</span>
+                  {!card.heroImage && <span style={{ fontSize: 12, color: t.textSecondary }}>IMAGE</span>}
 
                   {/* Item type icon */}
                   <div
@@ -690,7 +719,7 @@ export default function SwipeDeck() {
       )}
 
       <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7, textAlign: "center" }}>
-        Drag the card, or use the buttons below. Prototype preview — mock data only.
+        Drag the card, or use the buttons below.
       </p>
     </div>
   );
