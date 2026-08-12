@@ -1,4 +1,4 @@
-import ReviewAndSubmit from "@/components/mock/ReviewAndSubmit";
+import ReviewAndSubmit from "@/components/ReviewAndSubmit";
 
 export default function Page() {
   return <ReviewAndSubmit />;

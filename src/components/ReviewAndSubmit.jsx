@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
   dark: {
@@ -22,117 +23,60 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Mock items carried over from "Move to Review & Submit" — same pool as the
-// Saved gallery, here representing the items the customer selected and is
-// now moving into the `selected` state (an active shipment request, not a
-// purchase cart). Two brands deliberately included so the brand-split
-// behavior at submission is visible, not just claimed.
-const SEED_REVIEW_ITEMS = [
-  {
-    id: "p_001",
-    name: "Peak Lapel Tuxedo",
-    brandName: "Atelier Noir",
-    itemType: "gift",
-    costPrice: 4800,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    variants: [
-      { size: "40R", stockQuantity: 6 },
-      { size: "42R", stockQuantity: 2 },
-    ],
-  },
-  {
-    id: "p_006",
-    name: "One-of-One Embroidered Jacket",
-    brandName: "Atelier Noir",
-    itemType: "gift",
-    costPrice: 1200,
-    price: null,
-    currency: "USD",
-    isMadeToOrder: true,
-    deliveryWindow: "3–4 weeks",
-    variants: [{ size: "One size, tailored to fit", stockQuantity: null }],
-  },
-  {
-    id: "p_002",
-    name: "Wool Travel Blazer",
-    brandName: "Halden & Vance",
-    itemType: "purchase",
-    costPrice: 310,
-    price: 890,
-    currency: "USD",
-    isMadeToOrder: false,
-    deliveryWindow: null,
-    variants: [
-      { size: "S", stockQuantity: 14 },
-      { size: "M", stockQuantity: 9 },
-    ],
-  },
-];
+// Maps a saved_items row (joined with its product, the product's brand,
+// and the product's variants) onto the shape the render logic below
+// expects. Unlike SavedGallery, this screen needs product_variants (for
+// the per-item size picker) and brand id (not just name - needed for the
+// submit_requisition RPC call).
+function mapReviewItem(row) {
+  const p = row.products;
+  if (!p) return null;
+  return {
+    id: p.id,
+    name: p.name,
+    brandId: p.brands?.id ?? null,
+    brandName: p.brands?.brand_name ?? "",
+    itemType: p.item_type,
+    costPrice: p.cost_price,
+    price: p.price,
+    currency: p.currency,
+    isMadeToOrder: p.is_made_to_order,
+    deliveryWindow: p.delivery_window,
+    variants: (p.product_variants || []).map((v) => ({
+      id: v.id,
+      size: v.size,
+      stockQuantity: v.stock_quantity,
+    })),
+  };
+}
 
-// Mock gifting allowance state — per brand. Atelier Noir is deliberately
-// seeded close to its limit so the allowance-check-at-submission behavior
-// (Section 4.1) has a real failure case to demonstrate, not just a pass.
-const MOCK_ALLOWANCES = {
-  "Atelier Noir": { limit: 5000, consumed: 4600, currency: "USD", resetDate: "2026-09-30" },
-  "Halden & Vance": { limit: 2000, consumed: 300, currency: "USD", resetDate: "2026-09-30" },
-};
+function mapAddress(row) {
+  return {
+    id: row.id,
+    label: row.label,
+    line1: row.line1,
+    line2: row.line2 || "",
+    city: row.city,
+    state: row.state,
+    zip: row.zip,
+    country: row.country,
+    isDefault: row.is_default,
+    careOfContactId: row.care_of_contact_id,
+  };
+}
 
-// New entity: ShippingAddress. Multiple per customer, full CRUD, one marked
-// default. Confirmed per brand group at submission — VIP talent in
-// particular travel for work and may need delivery at an on-site location
-// rather than always their home address.
-const SEED_ADDRESSES = [
-  {
-    id: "addr_001",
-    label: "Home",
-    line1: "118 Ocean Ave, Apt 4B",
-    city: "Los Angeles",
-    state: "CA",
-    zip: "90291",
-    country: "United States",
-    isDefault: true,
-    careOfContactId: null,
-  },
-  {
-    id: "addr_002",
-    label: "On location — Atlanta shoot",
-    line1: "1100 Peachtree St NE, Suite 900",
-    city: "Atlanta",
-    state: "GA",
-    zip: "30309",
-    country: "United States",
-    isDefault: false,
-    careOfContactId: "contact_001",
-  },
-];
-
-// Mock contact roster — same shape/source as Settings → Contacts. Shown
-// here read-only, resolved per the chosen address's careOfContactId.
-const SEED_CONTACTS = [
-  {
-    id: "contact_001",
-    role: "Manager",
-    firstName: "Dana",
-    lastName: "Whitfield",
-    phone: "+1 (310) 555-0142",
-    email: "dana@whitfieldmgmt.com",
-    isAuthorizedPersonnel: true,
-    isApprovedForBrandView: true,
-  },
-  {
-    id: "contact_002",
-    role: "Assistant",
-    firstName: "Theo",
-    lastName: "Park",
-    phone: "+1 (213) 555-0188",
-    email: "theo.park@gmail.com",
-    isAuthorizedPersonnel: true,
-    isApprovedForBrandView: false,
-  },
-];
+function mapContact(row) {
+  return {
+    id: row.id,
+    role: row.role,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    phone: row.phone || "",
+    email: row.email || "",
+    isAuthorizedPersonnel: row.is_authorized_personnel,
+    isApprovedForBrandView: row.is_approved_for_brand_view,
+  };
+}
 
 function newAddressDraft() {
   return { label: "", line1: "", line2: "", city: "", state: "", zip: "", country: "United States" };
@@ -154,17 +98,66 @@ function groupByBrand(items) {
 }
 
 export default function ReviewAndSubmit() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [items, setItems] = useState(SEED_REVIEW_ITEMS);
-  const [sizeChoices, setSizeChoices] = useState({});
-  const [addresses, setAddresses] = useState(SEED_ADDRESSES);
-  const [contacts] = useState(SEED_CONTACTS); // read-only here; managed in Settings
+  const [customerId, setCustomerId] = useState(null);
+  const [items, setItems] = useState([]);
+  const [sizeChoices, setSizeChoices] = useState({}); // itemId -> product_variant_id
+  const [addresses, setAddresses] = useState([]);
+  const [contacts, setContacts] = useState([]); // read-only here; managed in Settings
   const [addressChoices, setAddressChoices] = useState({}); // brand -> addressId
   const [pickerOpenForBrand, setPickerOpenForBrand] = useState(null);
   const [editingAddressId, setEditingAddressId] = useState(null); // null = not editing; "new" = adding
   const [addressDraft, setAddressDraft] = useState(newAddressDraft());
   const [stage, setStage] = useState("review");
   const [submissionResults, setSubmissionResults] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const loadReviewItems = async (uid) => {
+    const { data, error } = await supabase
+      .from("saved_items")
+      .select("id, products(*, brands(id, brand_name), product_variants(*))")
+      .eq("customer_id", uid)
+      .order("liked_at", { ascending: false });
+    if (error) {
+      setLoadError(error.message);
+      return;
+    }
+    setItems((data || []).map(mapReviewItem).filter(Boolean));
+  };
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setCustomerId(user.id);
+
+      const [addressResult, contactResult] = await Promise.all([
+        supabase.from("shipping_addresses").select("*").eq("customer_id", user.id).order("created_at"),
+        supabase.from("customer_contacts").select("*").eq("customer_id", user.id).order("created_at"),
+      ]);
+
+      if (addressResult.error || contactResult.error) {
+        setLoadError((addressResult.error || contactResult.error).message);
+        setIsLoading(false);
+        return;
+      }
+
+      setAddresses((addressResult.data || []).map(mapAddress));
+      setContacts((contactResult.data || []).map(mapContact));
+      await loadReviewItems(user.id);
+      setIsLoading(false);
+    })();
+  }, []);
 
   const t = tokens[theme];
   const grouped = groupByBrand(items);
@@ -172,10 +165,12 @@ export default function ReviewAndSubmit() {
 
   const removeItem = (id) => {
     setItems((it) => it.filter((i) => i.id !== id));
+    // Doesn't touch saved_items - removing from this screen just means
+    // "not part of this submission", the item stays saved for later.
   };
 
-  const setSize = (id, size) => {
-    setSizeChoices((s) => ({ ...s, [id]: size }));
+  const setSize = (id, variantId) => {
+    setSizeChoices((s) => ({ ...s, [id]: variantId }));
   };
 
   const allSizesChosen = items.every((i) => sizeChoices[i.id]);
@@ -203,34 +198,59 @@ export default function ReviewAndSubmit() {
     setEditingAddressId(addr.id);
   };
 
-  const saveAddressDraft = () => {
+  const saveAddressDraft = async () => {
     if (!addressDraft.label.trim() || !addressDraft.line1.trim() || !addressDraft.city.trim()) {
       return; // minimal guard; full validation matches the Brand return-address pattern
     }
+    setActionError("");
+
+    const payload = {
+      label: addressDraft.label,
+      line1: addressDraft.line1,
+      line2: addressDraft.line2 || null,
+      city: addressDraft.city,
+      state: addressDraft.state,
+      zip: addressDraft.zip,
+      country: addressDraft.country,
+      care_of_contact_id: addressDraft.careOfContactId || null,
+    };
+
     if (editingAddressId === "new") {
-      const newAddr = {
-        id: `addr_${Date.now()}`,
-        ...addressDraft,
-        isDefault: addresses.length === 0,
-      };
-      setAddresses((a) => [...a, newAddr]);
+      const { data, error } = await supabase
+        .from("shipping_addresses")
+        .insert({ ...payload, customer_id: customerId, is_default: addresses.length === 0 })
+        .select()
+        .single();
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
+      setAddresses((a) => [...a, mapAddress(data)]);
     } else {
+      const { error } = await supabase
+        .from("shipping_addresses")
+        .update(payload)
+        .eq("id", editingAddressId);
+      if (error) {
+        setActionError(error.message);
+        return;
+      }
       setAddresses((a) =>
-        a.map((addr) => (addr.id === editingAddressId ? { ...addressDraft, id: addr.id, isDefault: addr.isDefault } : addr))
+        a.map((addr) => (addr.id === editingAddressId ? { ...addr, ...addressDraft } : addr))
       );
     }
     setEditingAddressId(null);
   };
 
-  const deleteAddress = (id) => {
-    setAddresses((a) => {
-      const remaining = a.filter((addr) => addr.id !== id);
-      // If the deleted address was default, promote the first remaining one.
-      if (a.find((addr) => addr.id === id)?.isDefault && remaining.length > 0) {
-        remaining[0] = { ...remaining[0], isDefault: true };
-      }
-      return remaining;
-    });
+  const deleteAddress = async (id) => {
+    setActionError("");
+    const wasDefault = addresses.find((addr) => addr.id === id)?.isDefault;
+    const { error } = await supabase.from("shipping_addresses").delete().eq("id", id);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    const remaining = addresses.filter((addr) => addr.id !== id);
     setAddressChoices((c) => {
       const next = { ...c };
       for (const brand of Object.keys(next)) {
@@ -238,32 +258,61 @@ export default function ReviewAndSubmit() {
       }
       return next;
     });
+    if (wasDefault && remaining.length > 0) {
+      await makeDefault(remaining[0].id);
+      return;
+    }
+    setAddresses(remaining);
   };
 
-  const makeDefault = (id) => {
+  const makeDefault = async (id) => {
+    setActionError("");
+    const { error: clearError } = await supabase
+      .from("shipping_addresses")
+      .update({ is_default: false })
+      .eq("customer_id", customerId);
+    if (clearError) {
+      setActionError(clearError.message);
+      return;
+    }
+    const { error } = await supabase.from("shipping_addresses").update({ is_default: true }).eq("id", id);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setAddresses((a) => a.map((addr) => ({ ...addr, isDefault: addr.id === id })));
   };
 
-  const brandSubtotal = (brand) =>
-    grouped[brand].reduce((sum, i) => sum + i.costPrice, 0);
+  const handleSubmit = async () => {
+    setActionError("");
+    setIsSubmitting(true);
 
-  const handleSubmit = () => {
-    const results = brandNames.map((brand) => {
-      const allowance = MOCK_ALLOWANCES[brand];
-      const subtotal = brandSubtotal(brand);
-      const wouldConsume = allowance.consumed + subtotal;
-      const passes = wouldConsume <= allowance.limit;
-      return {
-        brand,
-        items: grouped[brand],
-        subtotal,
-        allowance,
-        passes,
-        address: getAddressForBrand(brand),
-      };
-    });
+    const results = [];
+    for (const brand of brandNames) {
+      const brandItems = grouped[brand];
+      const address = getAddressForBrand(brand);
+      const payload = brandItems.map((i) => ({
+        product_id: i.id,
+        product_variant_id: sizeChoices[i.id],
+      }));
+
+      const { data, error } = await supabase.rpc("submit_requisition", {
+        p_brand_id: brandItems[0].brandId,
+        p_items: payload,
+        p_shipping_address_id: address.id,
+        p_care_of_contact_id: address.careOfContactId || null,
+      });
+
+      if (error) {
+        results.push({ brand, items: brandItems, passed: false, error: error.message });
+      } else {
+        results.push({ brand, items: brandItems, address, ...data });
+      }
+    }
+
     setSubmissionResults(results);
     setStage("submitted_results");
+    setIsSubmitting(false);
   };
 
   const labelStyle = {
@@ -302,7 +351,7 @@ export default function ReviewAndSubmit() {
               key={r.brand}
               style={{
                 background: t.surface,
-                border: `1px solid ${r.passes ? "rgba(99,153,34,0.4)" : "rgba(194,71,71,0.4)"}`,
+                border: `1px solid ${r.passed ? "rgba(99,153,34,0.4)" : "rgba(194,71,71,0.4)"}`,
                 borderRadius: 12,
                 padding: "16px 18px",
                 marginBottom: 14,
@@ -323,23 +372,32 @@ export default function ReviewAndSubmit() {
                   style={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: r.passes ? "#8FBF5A" : "#E27A7A",
-                    background: r.passes ? "rgba(99,153,34,0.14)" : "rgba(194,71,71,0.14)",
+                    color: r.passed ? "#8FBF5A" : "#E27A7A",
+                    background: r.passed ? "rgba(99,153,34,0.14)" : "rgba(194,71,71,0.14)",
                     padding: "3px 9px",
                     borderRadius: 6,
                   }}
                 >
-                  {r.passes ? "Submitted → Invoiced" : "Couldn't go through"}
+                  {r.passed ? "Submitted → Invoiced" : "Couldn't go through"}
                 </span>
               </div>
 
-              {r.items.map((i) => (
-                <p key={i.id} style={{ fontSize: 12.5, color: t.textSecondary, margin: "2px 0" }}>
-                  {i.name} · {sizeChoices[i.id]}
+              {r.passed && (
+                <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "0 0 6px 0" }}>
+                  Invoice {r.invoice_id}
                 </p>
-              ))}
+              )}
 
-              {r.passes && r.address && (
+              {r.items.map((i) => {
+                const sizeLabel = i.variants.find((v) => v.id === sizeChoices[i.id])?.size;
+                return (
+                  <p key={i.id} style={{ fontSize: 12.5, color: t.textSecondary, margin: "2px 0" }}>
+                    {i.name} · {sizeLabel}
+                  </p>
+                );
+              })}
+
+              {r.passed && r.address && (
                 <>
                   <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "8px 0 0 0" }}>
                     Shipping to {r.address.label} ({r.address.city}, {r.address.state}) — the
@@ -356,25 +414,31 @@ export default function ReviewAndSubmit() {
                 </>
               )}
 
-              {r.passes ? (
+              {r.passed ? (
                 <p style={{ fontSize: 12, color: t.textSecondary, margin: "10px 0 0 0", lineHeight: 1.5 }}>
                   An invoice has been generated and sent to {r.brand}'s fulfilment team. You'll see
                   this move to "In Progress" once they confirm.
                 </p>
+              ) : r.error ? (
+                <p style={{ fontSize: 12, color: "#E27A7A", margin: "10px 0 0 0", lineHeight: 1.5 }}>
+                  {r.error}
+                </p>
               ) : (
                 <p style={{ fontSize: 12, color: t.textSecondary, margin: "10px 0 0 0", lineHeight: 1.5 }}>
-                  This brand's gifting allowance resets {r.allowance.resetDate}. These items have
-                  been returned to your saved gallery — nothing was lost.
+                  {r.reset_date
+                    ? `This brand's gifting allowance resets ${r.reset_date}.`
+                    : "This brand doesn't have a gifting allowance configured yet."}{" "}
+                  These items have been returned to your saved gallery — nothing was lost.
                 </p>
               )}
             </div>
           ))}
 
           <button
-            onClick={() => {
+            onClick={async () => {
               setStage("review");
-              setItems(SEED_REVIEW_ITEMS);
               setSizeChoices({});
+              if (customerId) await loadReviewItems(customerId);
             }}
             style={{
               width: "100%",
@@ -390,7 +454,7 @@ export default function ReviewAndSubmit() {
               fontFamily: "'Roboto', sans-serif",
             }}
           >
-            Back to start (preview reset)
+            Back to saved
           </button>
         </div>
       </div>
@@ -455,7 +519,29 @@ export default function ReviewAndSubmit() {
           </p>
         </div>
 
-        {items.length === 0 && (
+        {(loadError || actionError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {loadError || actionError}
+          </div>
+        )}
+
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "32px 0", fontSize: 13, color: t.textSecondary }}>
+            Loading…
+          </div>
+        )}
+
+        {!isLoading && items.length === 0 && (
           <div
             style={{
               border: `1px dashed ${t.border}`,
@@ -465,12 +551,12 @@ export default function ReviewAndSubmit() {
             }}
           >
             <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
-              Nothing left to review. Removed items return to your saved gallery.
+              Nothing to review yet. Save pieces from the deck to bring them here.
             </p>
           </div>
         )}
 
-        {brandNames.map((brand) => (
+        {!isLoading && brandNames.map((brand) => (
           <div key={brand} style={{ marginBottom: 22 }}>
             <p
               style={{ fontSize: 13.5, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}
@@ -561,12 +647,12 @@ export default function ReviewAndSubmit() {
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 5 }}>
                       {item.variants.map((v) => {
                         const disabled = !item.isMadeToOrder && v.stockQuantity === 0;
-                        const selected = chosenSize === v.size;
+                        const selected = chosenSize === v.id;
                         return (
                           <button
-                            key={v.size}
+                            key={v.id}
                             disabled={disabled}
-                            onClick={() => setSize(item.id, v.size)}
+                            onClick={() => setSize(item.id, v.id)}
                             style={{
                               fontSize: 12,
                               fontWeight: 500,
@@ -772,7 +858,7 @@ export default function ReviewAndSubmit() {
         ))}
       </div>
 
-      {items.length > 0 && (
+      {!isLoading && items.length > 0 && (
         <div
           style={{
             position: "fixed",
@@ -799,24 +885,26 @@ export default function ReviewAndSubmit() {
             }}
           >
             <span style={{ fontSize: 12, color: t.textSecondary }}>
-              {!allSizesChosen
+              {isSubmitting
+                ? "Submitting…"
+                : !allSizesChosen
                 ? "Pick a size for each piece"
                 : !allAddressesConfirmed
                 ? "Confirm a shipping address for each brand"
                 : `${brandNames.length} request${brandNames.length === 1 ? "" : "s"} ready`}
             </span>
             <button
-              disabled={!allSizesChosen || !allAddressesConfirmed}
+              disabled={!allSizesChosen || !allAddressesConfirmed || isSubmitting}
               onClick={handleSubmit}
               style={{
                 fontSize: 13,
                 fontWeight: 500,
-                color: allSizesChosen && allAddressesConfirmed ? "#0F0F0F" : t.textSecondary,
-                background: allSizesChosen && allAddressesConfirmed ? tokens.gold : t.surfaceRaised,
-                border: allSizesChosen && allAddressesConfirmed ? "none" : `1px solid ${t.border}`,
+                color: allSizesChosen && allAddressesConfirmed && !isSubmitting ? "#0F0F0F" : t.textSecondary,
+                background: allSizesChosen && allAddressesConfirmed && !isSubmitting ? tokens.gold : t.surfaceRaised,
+                border: allSizesChosen && allAddressesConfirmed && !isSubmitting ? "none" : `1px solid ${t.border}`,
                 borderRadius: 8,
                 padding: "9px 18px",
-                cursor: allSizesChosen && allAddressesConfirmed ? "pointer" : "not-allowed",
+                cursor: allSizesChosen && allAddressesConfirmed && !isSubmitting ? "pointer" : "not-allowed",
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
@@ -974,8 +1062,9 @@ export default function ReviewAndSubmit() {
       )}
 
       <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 14, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only. If left here unsubmitted, this request would expire
-        back to Saved after 7 days, with a reminder on day 5 — no allowance impact either way.
+        If left here unsubmitted, this request would expire back to Saved after 7 days, with a
+        reminder on day 5 — no allowance impact either way. (Expiry isn't built yet — items just
+        stay here until you submit or remove them.)
       </p>
     </div>
   );
