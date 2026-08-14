@@ -25,7 +25,7 @@ returns requisitions
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   v_req requisitions%rowtype;
   v_next requisition_state;
@@ -78,7 +78,7 @@ begin
 
   return v_req;
 end;
-$;
+$$;
 
 grant execute on function advance_requisition_state(uuid, text) to authenticated;
 
@@ -95,7 +95,7 @@ returns requisitions
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   v_req requisitions%rowtype;
 begin
@@ -130,6 +130,6 @@ begin
 
   return v_req;
 end;
-$;
+$$;
 
 grant execute on function decline_requisition(uuid, text) to authenticated;

@@ -20,7 +20,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 begin
   if auth_role() <> 'platform_admin' then
     new.status := old.status;
@@ -29,7 +29,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 create trigger brands_lock_admin_columns
   before update on brands
