@@ -1,4 +1,4 @@
-import BrandCompanySettings from "@/components/mock/BrandCompanySettings";
+import BrandCompanySettings from "@/components/BrandCompanySettings";
 
 export default function Page() {
   return <BrandCompanySettings />;

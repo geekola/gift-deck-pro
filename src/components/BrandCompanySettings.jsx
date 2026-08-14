@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (from PSF design token system — confirmed) ──────────────
 const tokens = {
@@ -29,27 +30,37 @@ const CATEGORIES = ["Casual", "Business", "Formal", "Custom"];
 
 const COUNTRIES = ["United States", "Canada", "United Kingdom", "France", "Italy", "Other"];
 
-// Mock brand record — illustrative only. Represents an already-approved brand
-// (post-registration) editing their settings for the first time, before a
-// return address has ever been set — the new required field starts empty.
-const SEED_BRAND = {
-  brandName: "Atelier Noir",
-  email: "admin@ateliernoir.com",
-  contactFirstName: "Claire",
-  contactLastName: "Dubois",
-  phoneNumber: "+1 (212) 555-0148",
-  website: "https://ateliernoir.com",
-  fulfilmentEmail: "orders@ateliernoir.com",
-  category: "Formal",
-  returnAddress: {
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "United States",
-  },
+const EMPTY_ADDRESS = {
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "United States",
 };
+
+// Maps a Supabase brands row (snake_case, flat return_* address columns)
+// onto the camelCase/nested shape the form already expects.
+function mapBrand(row) {
+  return {
+    brandName: row.brand_name ?? "",
+    email: row.email ?? "",
+    contactFirstName: row.contact_first_name ?? "",
+    contactLastName: row.contact_last_name ?? "",
+    phoneNumber: row.phone_number ?? "",
+    website: row.website ?? "",
+    fulfilmentEmail: row.fulfilment_email ?? "",
+    category: row.category ?? "",
+    returnAddress: {
+      line1: row.return_line1 ?? "",
+      line2: row.return_line2 ?? "",
+      city: row.return_city ?? "",
+      state: row.return_state ?? "",
+      zip: row.return_zip ?? "",
+      country: row.return_country ?? "United States",
+    },
+  };
+}
 
 function validate(form) {
   const errors = {};
@@ -78,7 +89,7 @@ function validate(form) {
   }
   if (!form.category) errors.category = "Select a category.";
 
-  // ── Return address — NEW, required, structured fields ──
+  // ── Return address — required, structured fields ──
   const addrErrors = {};
   if (!form.returnAddress.line1.trim()) addrErrors.line1 = "Street address is required.";
   if (!form.returnAddress.city.trim()) addrErrors.city = "City is required.";
@@ -90,12 +101,60 @@ function validate(form) {
   return errors;
 }
 
-export default function BrandSettingsPage() {
+export default function BrandCompanySettings() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
-  const [form, setForm] = useState(SEED_BRAND);
+  const [brandId, setBrandId] = useState(null);
+  const [form, setForm] = useState(null);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [saved, setSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("brand_id")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile?.brand_id) {
+        setLoadError("Couldn't load your brand account. Try refreshing.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("brands")
+        .select(
+          "brand_name, email, contact_first_name, contact_last_name, phone_number, website, fulfilment_email, category, return_line1, return_line2, return_city, return_state, return_zip, return_country"
+        )
+        .eq("id", profile.brand_id)
+        .single();
+
+      if (error || !data) {
+        setLoadError(error?.message || "Couldn't load your company settings.");
+      } else {
+        setBrandId(profile.brand_id);
+        setForm(mapBrand(data));
+      }
+      setIsLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const t = tokens[theme];
 
@@ -113,7 +172,7 @@ export default function BrandSettingsPage() {
   const markAddrTouched = (key) =>
     setTouched((tt) => ({ ...tt, [`addr_${key}`]: true }));
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const allErrors = validate(form);
     setErrors(allErrors);
@@ -132,9 +191,37 @@ export default function BrandSettingsPage() {
       addr_zip: true,
       addr_country: true,
     });
-    if (Object.keys(allErrors).length === 0) {
+    if (Object.keys(allErrors).length > 0) return;
+
+    setIsSaving(true);
+    setSaveError("");
+
+    const { error } = await supabase
+      .from("brands")
+      .update({
+        brand_name: form.brandName.trim(),
+        email: form.email.trim(),
+        contact_first_name: form.contactFirstName.trim(),
+        contact_last_name: form.contactLastName.trim(),
+        phone_number: form.phoneNumber.trim(),
+        website: form.website.trim(),
+        fulfilment_email: form.fulfilmentEmail.trim(),
+        category: form.category,
+        return_line1: form.returnAddress.line1.trim(),
+        return_line2: form.returnAddress.line2.trim() || null,
+        return_city: form.returnAddress.city.trim(),
+        return_state: form.returnAddress.state.trim(),
+        return_zip: form.returnAddress.zip.trim(),
+        return_country: form.returnAddress.country.trim(),
+      })
+      .eq("id", brandId);
+
+    if (error) {
+      setSaveError(error.message);
+    } else {
       setSaved(true);
     }
+    setIsSaving(false);
   };
 
   const labelStyle = {
@@ -176,6 +263,24 @@ export default function BrandSettingsPage() {
   const errorText = (msg) => (
     <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{msg}</p>
   );
+
+  if (isLoading || loadError || !form) {
+    return (
+      <div
+        style={{
+          fontFamily: "'Roboto', sans-serif",
+          background: t.bgBase,
+          minHeight: 640,
+          padding: "28px 20px",
+          textAlign: "center",
+        }}
+      >
+        <p style={{ fontSize: 13, color: loadError ? "#E27A7A" : t.textSecondary, marginTop: 40 }}>
+          {loadError || "Loading…"}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -257,7 +362,7 @@ export default function BrandSettingsPage() {
               Company settings
             </h1>
             <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
-              Available after approval. Updates here apply immediately across the portal.
+              Updates here apply immediately across the portal.
             </p>
           </div>
           {saved && (
@@ -276,6 +381,22 @@ export default function BrandSettingsPage() {
             </span>
           )}
         </div>
+
+        {saveError && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {saveError}
+          </div>
+        )}
 
         <form onSubmit={handleSave}>
           {/* ── Brand details ── */}
@@ -389,6 +510,9 @@ export default function BrandSettingsPage() {
                   onBlur={() => markTouched("email")}
                   style={inputStyle(touched.email && errors.email)}
                 />
+                <p style={{ fontSize: 11, color: t.textSecondary, margin: "5px 0 0 0" }}>
+                  Display/contact only — doesn't change your actual sign-in email.
+                </p>
                 {touched.email && errors.email && errorText(errors.email)}
               </div>
               <div style={{ flex: 1 }}>
@@ -432,7 +556,7 @@ export default function BrandSettingsPage() {
             </div>
           </div>
 
-          {/* ── Return address (NEW) ── */}
+          {/* ── Return address ── */}
           <div
             style={{
               background: t.surface,
@@ -542,6 +666,7 @@ export default function BrandSettingsPage() {
 
           <button
             type="submit"
+            disabled={isSaving}
             style={{
               width: "100%",
               padding: "13px 0",
@@ -553,24 +678,13 @@ export default function BrandSettingsPage() {
               border: "none",
               borderRadius: 8,
               cursor: "pointer",
+              opacity: isSaving ? 0.7 : 1,
             }}
           >
-            Save changes
+            {isSaving ? "Saving…" : "Save changes"}
           </button>
         </form>
       </div>
-
-      <p
-        style={{
-          fontSize: 11,
-          color: t.textSecondary,
-          marginTop: 18,
-          opacity: 0.7,
-          textAlign: "center",
-        }}
-      >
-        Prototype preview — mock data only, no live backend connection
-      </p>
     </div>
   );
 }
