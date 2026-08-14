@@ -5,8 +5,7 @@ const sections: { label: string; links: { href: string; label: string }[] }[] = 
     label: "Platform Admin",
     links: [
       { href: "/platform-admin/login", label: "Log in" },
-      { href: "/platform-admin", label: "Dashboard shell (auth-guarded)" },
-      { href: "/platform-admin/review-queue", label: "Brand application review queue (auth-guarded)" },
+      { href: "/platform-admin", label: "Dashboard (auth-guarded) — review queue, restrictions, VIP contracts" },
     ],
   },
   {

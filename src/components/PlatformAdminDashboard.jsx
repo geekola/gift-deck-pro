@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -27,7 +27,9 @@ const tokens = {
   gold: "#B98128",
 };
 
-// ── Shared mock data pool — consistent across all three sections ──────────
+// ── Shared mock data pool — still used by the Restrictions / VIP sections
+// (steps 2-3 of the MVP process — not wired yet). Review Queue below no
+// longer touches this; it was ported to real Supabase data as MVP step 1. ──
 const MOCK_CUSTOMERS = [
   { id: "cust_001", name: "Alex M.", tier: "general" },
   { id: "cust_002", name: "Priya K.", tier: "VIP" },
@@ -40,51 +42,6 @@ const MOCK_BRANDS = [
   { id: "brand_001", name: "Atelier Noir" },
   { id: "brand_002", name: "Halden & Vance" },
   { id: "brand_003", name: "Roux Studio" },
-];
-
-const SEED_APPLICATIONS = [
-  {
-    id: "brand_app_001",
-    brandName: "Atelier Noir",
-    email: "admin@ateliernoir.com",
-    contactFirstName: "Claire",
-    contactLastName: "Dubois",
-    phoneNumber: "+1 (212) 555-0148",
-    website: "https://ateliernoir.com",
-    fulfilmentEmail: "orders@ateliernoir.com",
-    category: "Formal",
-    registeredAt: "2026-06-21T16:04:00Z",
-    status: "pending",
-    notes: [],
-  },
-  {
-    id: "brand_app_002",
-    brandName: "Halden & Vance",
-    email: "ops@haldenvance.com",
-    contactFirstName: "Marcus",
-    contactLastName: "Vance",
-    phoneNumber: "+1 (310) 555-0173",
-    website: "https://haldenvance.com",
-    fulfilmentEmail: "fulfilment@haldenvance.com",
-    category: "Casual",
-    registeredAt: "2026-06-22T09:31:00Z",
-    status: "pending",
-    notes: [],
-  },
-  {
-    id: "brand_app_003",
-    brandName: "Roux Studio",
-    email: "hello@rouxstudio.co",
-    contactFirstName: "Inès",
-    contactLastName: "Roux",
-    phoneNumber: "+1 (646) 555-0119",
-    website: "https://rouxstudio.co",
-    fulfilmentEmail: "hello@rouxstudio.co",
-    category: "Business",
-    registeredAt: "2026-06-23T13:52:00Z",
-    status: "pending",
-    notes: [],
-  },
 ];
 
 const SEED_RESTRICTIONS = [
@@ -160,15 +117,74 @@ function isExpired(restriction) {
 // ═══════════════════════════════════════════════════════════════════════
 // SECTION: Review Queue
 // ═══════════════════════════════════════════════════════════════════════
+//
+// MVP step 1: this used to be local mock state (SEED_APPLICATIONS) that
+// reset on every refresh, while a separate, fully-wired real component
+// (PlatformAdminReviewQueue.jsx) sat at an unlinked standalone route
+// nothing in this sidebar pointed to. Ported that component's real
+// Supabase logic in here instead of the other way around, since this
+// dashboard's sidebar-tab shell is the actual intended layout (matches
+// how Restrictions/VIP Contracts below are structured) — the standalone
+// route's own page-chrome/header made it unsuitable to embed as-is.
+// PlatformAdminReviewQueue.jsx and its route are removed as part of this
+// same change; this section is now the only real implementation.
 function ReviewQueueSection({ t }) {
-  const [applications, setApplications] = useState(SEED_APPLICATIONS);
-  const [selectedId, setSelectedId] = useState(SEED_APPLICATIONS[0].id);
+  const supabase = createClient();
+
+  const [applications, setApplications] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState("");
   const [filter, setFilter] = useState("pending");
   const [newNote, setNewNote] = useState("");
   const [noteError, setNoteError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+
+  // Maps a Supabase brands row (joined with brand_application_notes) onto
+  // the camelCase shape the render logic below expects.
+  const mapApplication = (row) => ({
+    id: row.id,
+    brandName: row.brand_name,
+    email: row.email,
+    contactFirstName: row.contact_first_name,
+    contactLastName: row.contact_last_name,
+    phoneNumber: row.phone_number,
+    website: row.website,
+    fulfilmentEmail: row.fulfilment_email,
+    category: row.category,
+    registeredAt: row.created_at,
+    status: row.status,
+    rejectionReason: row.rejection_reason,
+    reviewedAt: row.status === "pending" ? null : row.updated_at,
+    notes: (row.brand_application_notes || [])
+      .slice()
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .map((n) => ({ id: n.id, text: n.note, at: n.created_at })),
+  });
+
+  const loadApplications = async () => {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("*, brand_application_notes(*)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      const mapped = (data || []).map(mapApplication);
+      setApplications(mapped);
+      setSelectedId((current) => current ?? mapped[0]?.id ?? null);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selected = applications.find((a) => a.id === selectedId) || null;
   const visibleApplications = applications.filter((a) =>
@@ -185,49 +201,68 @@ function ReviewQueueSection({ t }) {
   };
   const valueStyle = { fontSize: 14, color: t.textPrimary, margin: "0 0 14px 0", wordBreak: "break-word" };
 
-  const handleApprove = () => {
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? { ...a, status: "approved", reviewedAt: new Date().toISOString(), reviewedBy: "platform_admin_preview" }
-          : a
-      )
-    );
+  const handleApprove = async () => {
+    if (!selected) return;
+    setActionError("");
+    const { error } = await supabase
+      .from("brands")
+      .update({ status: "approved", approved_at: new Date().toISOString() })
+      .eq("id", selected.id);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
     setRejectMode(false);
     setRejectReason("");
+    await loadApplications();
   };
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (!rejectReason.trim()) {
       setRejectError("A rejection reason is required before this can be submitted.");
       return;
     }
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? { ...a, status: "rejected", reviewedAt: new Date().toISOString(), reviewedBy: "platform_admin_preview", rejectionReason: rejectReason.trim() }
-          : a
-      )
-    );
+    setActionError("");
+    const { error } = await supabase
+      .from("brands")
+      .update({ status: "rejected", rejection_reason: rejectReason.trim() })
+      .eq("id", selected.id);
+
+    if (error) {
+      setRejectError(error.message);
+      return;
+    }
     setRejectMode(false);
     setRejectReason("");
     setRejectError("");
+    await loadApplications();
   };
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.trim()) {
       setNoteError("Enter a note before adding it.");
       return;
     }
-    setApplications((apps) =>
-      apps.map((a) =>
-        a.id === selected.id
-          ? { ...a, notes: [...(a.notes || []), { id: `note_${Date.now()}`, text: newNote.trim(), by: "platform_admin_preview", at: new Date().toISOString() }] }
-          : a
-      )
-    );
+    setActionError("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase.from("brand_application_notes").insert({
+      brand_id: selected.id,
+      note: newNote.trim(),
+      created_by: user?.id ?? null,
+    });
+
+    if (error) {
+      setNoteError(error.message);
+      return;
+    }
     setNewNote("");
     setNoteError("");
+    await loadApplications();
   };
 
   const formatDateTime = (iso) => {
@@ -258,6 +293,12 @@ function ReviewQueueSection({ t }) {
         </p>
       </div>
 
+      {(loadError || actionError) && (
+        <div style={{ background: "rgba(194,71,71,0.12)", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#E27A7A", marginBottom: 16 }}>
+          {loadError || actionError}
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         {[{ key: "pending", label: "Pending" }, { key: "approved", label: "Approved" }, { key: "rejected", label: "Rejected" }, { key: "all", label: "All" }].map((f) => {
           const active = filter === f.key;
@@ -271,8 +312,9 @@ function ReviewQueueSection({ t }) {
 
       <div style={{ display: "flex", gap: 16 }}>
         <div style={{ flex: "0 0 300px", background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, overflow: "hidden" }}>
-          {visibleApplications.length === 0 && <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>No applications in this view.</div>}
-          {visibleApplications.map((app, idx) => {
+          {isLoading && <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>Loading applications…</div>}
+          {!isLoading && visibleApplications.length === 0 && <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>No applications in this view.</div>}
+          {!isLoading && visibleApplications.map((app, idx) => {
             const isSelected = app.id === selectedId;
             return (
               <div key={app.id} onClick={() => { setSelectedId(app.id); setRejectMode(false); setRejectReason(""); setRejectError(""); setNewNote(""); setNoteError(""); }}
