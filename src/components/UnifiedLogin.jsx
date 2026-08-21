@@ -75,6 +75,8 @@ export default function UnifiedLogin() {
       setAuthError("That account isn't set up as a customer or brand login. Platform admins should use the admin login instead.");
     } else if (err === "auth") {
       setAuthError("That link didn't work. Try signing in again.");
+    } else if (err === "registration_failed") {
+      setAuthError("Your email was confirmed, but finishing your brand registration failed. Contact support so we can complete it manually - your account is still just a plain login for now.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

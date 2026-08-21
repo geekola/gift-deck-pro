@@ -51,14 +51,13 @@ export async function GET(request: Request) {
     });
 
     if (rpcError) {
-      // Most likely cause: this confirmation link was already used once
-      // and the brand was already created (register_brand rejects a
-      // second call once role is no longer 'customer'). Not a real
-      // failure from the user's point of view.
+      // Could be a harmless re-run (link already used once, brand
+      // already created - register_brand rejects a second call once
+      // role is no longer 'customer') or a genuine first-time failure.
+      // Don't trust the error alone either way - the profile check below
+      // is what actually decides the redirect, not this.
       console.error("register_brand failed:", rpcError.message);
     }
-
-    return NextResponse.redirect(`${origin}/login?status=pending`);
   }
 
   // Login unification (via /login) exposes Google OAuth to whichever
@@ -91,6 +90,18 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${origin}/login?status=rejected`);
     }
     return NextResponse.redirect(`${origin}/login?status=pending`);
+  }
+
+  if (pendingBrand) {
+    // Still just a customer after trying to register - register_brand
+    // genuinely failed above rather than hitting the harmless
+    // already-registered case (that would have shown up as role =
+    // 'brand_user' in the check above). Surface this explicitly instead
+    // of redirecting to the pending screen, which would otherwise claim
+    // a registration succeeded when nothing was actually created - the
+    // exact silent failure that let a real account get stuck as a plain
+    // customer with no brands row at all.
+    return NextResponse.redirect(`${origin}/login?error=registration_failed`);
   }
 
   await ensureCustomerRow(supabase, data.user);
