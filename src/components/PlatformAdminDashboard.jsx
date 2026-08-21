@@ -1144,18 +1144,6 @@ export default function PlatformAdminDashboard() {
           <RestrictionManagerSection t={t} onGoToVip={() => setActiveSection("vip_contracts")} />
         )}
         {activeSection === "vip_contracts" && <VipContractsSection t={t} />}
-
-        <p
-          style={{
-            fontSize: 11,
-            color: t.textSecondary,
-            marginTop: 24,
-            opacity: 0.7,
-            textAlign: "center",
-          }}
-        >
-          Prototype preview — mock data only, no live backend connection
-        </p>
       </div>
     </div>
   );
