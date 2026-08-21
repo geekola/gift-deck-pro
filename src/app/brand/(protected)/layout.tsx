@@ -34,7 +34,7 @@ export default async function BrandProtectedLayout({
 
   const { data: brand } = await supabase
     .from("brands")
-    .select("status")
+    .select("status, return_line1, return_city, return_state, return_zip, return_country")
     .eq("id", profile.brand_id)
     .single();
 
@@ -46,5 +46,41 @@ export default async function BrandProtectedLayout({
     redirect("/brand/login?status=pending");
   }
 
-  return <>{children}</>;
+  // MVP step 5: nothing enforced a return address getting set once a
+  // brand was approved (migration 0011 dropped the pre-approval DB
+  // constraint). advance_requisition_state (migration 0020) now hard-
+  // blocks invoicing an order without one; this banner is the earlier,
+  // softer warning so a brand finds out before they hit that wall
+  // rather than during it.
+  const missingReturnAddress =
+    !brand?.return_line1 ||
+    !brand?.return_city ||
+    !brand?.return_state ||
+    !brand?.return_zip ||
+    !brand?.return_country;
+
+  return (
+    <>
+      {missingReturnAddress && (
+        <div
+          style={{
+            fontFamily: "'Roboto', sans-serif",
+            background: "rgba(185,129,40,0.14)",
+            borderBottom: "1px solid rgba(185,129,40,0.35)",
+            color: "#EAEAEA",
+            fontSize: 13,
+            padding: "10px 20px",
+            textAlign: "center",
+          }}
+        >
+          Your return address isn't set yet.{" "}
+          <a href="/brand/settings" style={{ color: "#B98128", fontWeight: 500, textDecoration: "underline" }}>
+            Add it in Company settings
+          </a>{" "}
+          — you won't be able to mark an order as invoiced until it's complete.
+        </div>
+      )}
+      {children}
+    </>
+  );
 }
