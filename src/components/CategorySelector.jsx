@@ -107,7 +107,7 @@ export default function CategorySelector() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -119,7 +119,7 @@ export default function CategorySelector() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                What are you in the mood for?
+                What Are You in the Mood For?
               </h1>
               <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 Pick a category to enter its deck. You can switch anytime.
@@ -141,7 +141,7 @@ export default function CategorySelector() {
                 flexShrink: 0,
               }}
             >
-              + Browse brands
+              + Browse Brands
             </button>
           </div>
         </div>

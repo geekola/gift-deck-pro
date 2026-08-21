@@ -120,7 +120,7 @@ const UI_TO_GENDER_SET = { male: "mens", female: "womens" };
 const SECTIONS = [
   { key: "appearance", label: "Appearance" },
   { key: "contacts", label: "Contacts" },
-  { key: "addresses", label: "Shipping addresses" },
+  { key: "addresses", label: "Shipping Addresses" },
   { key: "measurements", label: "Measurements" },
 ];
 
@@ -631,7 +631,7 @@ export default function CustomerSettings() {
                       }}
                     >
                       <label style={{ ...labelStyle, marginBottom: 4 }}>
-                        Care of (C/O) on shipping label
+                        Care of (C/O) on Shipping Label
                       </label>
                       <select
                         value={addr.careOfContactId || ""}
@@ -675,7 +675,7 @@ export default function CustomerSettings() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              + Add new address
+              + Add New Address
             </button>
           </div>
         )}
@@ -766,12 +766,12 @@ export default function CustomerSettings() {
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {c.isAuthorizedPersonnel && (
                       <span style={{ fontSize: 10.5, color: "#8FBF5A", background: "rgba(99,153,34,0.14)", padding: "2px 8px", borderRadius: 5 }}>
-                        Authorized personnel
+                        Authorized Personnel
                       </span>
                     )}
                     {c.isApprovedForBrandView && (
                       <span style={{ fontSize: 10.5, color: t.textPrimary, background: t.surfaceRaised, border: `1px solid ${t.border}`, padding: "2px 8px", borderRadius: 5 }}>
-                        Visible to brand managers
+                        Visible to Brand Managers
                       </span>
                     )}
                   </div>
@@ -794,7 +794,7 @@ export default function CustomerSettings() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              + Add contact
+              + Add Contact
             </button>
           </div>
         )}
@@ -909,7 +909,7 @@ export default function CustomerSettings() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Save measurements
+              Save Measurements
             </button>
 
             {savedMeasurements && (
@@ -965,7 +965,7 @@ export default function CustomerSettings() {
             }}
           >
             <p style={{ fontSize: 14, fontWeight: 700, color: t.textPrimary, margin: "0 0 14px 0" }}>
-              {editingAddressId === "new" ? "Add address" : "Edit address"}
+              {editingAddressId === "new" ? "Add Address" : "Edit Address"}
             </p>
 
             {[
@@ -1059,7 +1059,7 @@ export default function CustomerSettings() {
                     fontFamily: "'Roboto', sans-serif",
                   }}
                 >
-                  Make default
+                  Make Default
                 </button>
                 <button
                   onClick={() => {
@@ -1075,7 +1075,7 @@ export default function CustomerSettings() {
                     fontFamily: "'Roboto', sans-serif",
                   }}
                 >
-                  Delete address
+                  Delete Address
                 </button>
               </div>
             )}
@@ -1112,7 +1112,7 @@ export default function CustomerSettings() {
             }}
           >
             <p style={{ fontSize: 14, fontWeight: 700, color: t.textPrimary, margin: "0 0 14px 0" }}>
-              {editingContactId === "new" ? "Add contact" : "Edit contact"}
+              {editingContactId === "new" ? "Add Contact" : "Edit Contact"}
             </p>
 
             <label style={{ ...labelStyle, marginBottom: 5 }}>Role</label>
@@ -1231,7 +1231,7 @@ export default function CustomerSettings() {
                 borderTop: `1px solid ${t.border}`,
               }}
             >
-              <span style={{ fontSize: 12.5, color: t.textPrimary }}>Authorized personnel</span>
+              <span style={{ fontSize: 12.5, color: t.textPrimary }}>Authorized Personnel</span>
               <button
                 type="button"
                 onClick={() =>
@@ -1274,7 +1274,7 @@ export default function CustomerSettings() {
             >
               <div>
                 <span style={{ fontSize: 12.5, color: t.textPrimary, display: "block" }}>
-                  Visible to brand managers
+                  Visible to Brand Managers
                 </span>
                 <span style={{ fontSize: 10.5, color: t.textSecondary }}>
                   Shown as an "Approved Contact" in the brand's customer access view
@@ -1367,7 +1367,7 @@ export default function CustomerSettings() {
                   padding: "6px 0",
                 }}
               >
-                Delete contact
+                Delete Contact
               </button>
             )}
           </div>

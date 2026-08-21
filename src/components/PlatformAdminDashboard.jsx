@@ -28,7 +28,7 @@ const tokens = {
 };
 
 const CONTRACT_STATUSES = [
-  { key: "none", label: "No contract on file" },
+  { key: "none", label: "No Contract on File" },
   { key: "pending", label: "Pending" },
   { key: "executed", label: "Executed" },
   { key: "expired", label: "Expired" },
@@ -206,7 +206,7 @@ function ReviewQueueSection({ t }) {
 
   const statusBadge = (status) => {
     const map = {
-      pending: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Pending review" },
+      pending: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Pending Review" },
       approved: { bg: "rgba(99,153,34,0.16)", color: "#8FBF5A", label: "Approved" },
       rejected: { bg: "rgba(194,71,71,0.14)", color: "#E27A7A", label: "Rejected" },
     };
@@ -221,7 +221,7 @@ function ReviewQueueSection({ t }) {
   return (
     <div>
       <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>Brand applications</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>Brand Applications</h1>
         <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
           {pendingCount} {pendingCount === 1 ? "application" : "applications"} awaiting review
         </p>
@@ -278,17 +278,17 @@ function ReviewQueueSection({ t }) {
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px", marginBottom: 4 }}>
-                <div><span style={labelStyle}>Primary contact</span><p style={valueStyle}>{selected.contactFirstName} {selected.contactLastName}</p></div>
-                <div><span style={labelStyle}>Phone number</span><p style={valueStyle}>{selected.phoneNumber}</p></div>
-                <div><span style={labelStyle}>Admin login email</span><p style={valueStyle}>{selected.email}</p></div>
-                <div><span style={labelStyle}>Fulfilment email</span><p style={valueStyle}>{selected.fulfilmentEmail}</p></div>
+                <div><span style={labelStyle}>Primary Contact</span><p style={valueStyle}>{selected.contactFirstName} {selected.contactLastName}</p></div>
+                <div><span style={labelStyle}>Phone Number</span><p style={valueStyle}>{selected.phoneNumber}</p></div>
+                <div><span style={labelStyle}>Admin Login Email</span><p style={valueStyle}>{selected.email}</p></div>
+                <div><span style={labelStyle}>Fulfilment Email</span><p style={valueStyle}>{selected.fulfilmentEmail}</p></div>
                 <div><span style={labelStyle}>Website</span><p style={valueStyle}><a href={selected.website} style={{ color: tokens.gold, textDecoration: "none" }}>{selected.website}</a></p></div>
                 <div><span style={labelStyle}>Submitted</span><p style={valueStyle}>{formatDate(selected.registeredAt)}</p></div>
               </div>
 
               {selected.status === "rejected" && selected.rejectionReason && (
                 <div style={{ background: "rgba(194,71,71,0.08)", border: "1px solid rgba(194,71,71,0.25)", borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: "#E27A7A" }}>Rejection reason</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: "#E27A7A" }}>Rejection Reason</span>
                   <p style={{ fontSize: 13, color: t.textPrimary, margin: "4px 0 0 0" }}>{selected.rejectionReason}</p>
                 </div>
               )}
@@ -310,7 +310,7 @@ function ReviewQueueSection({ t }) {
                   <textarea value={newNote} onChange={(e) => { setNewNote(e.target.value); if (noteError) setNoteError(""); }} placeholder="e.g. Brand emailed requesting reconsideration..." rows={2}
                     style={{ width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: 13, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${noteError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
                   {noteError && <p style={{ fontSize: 12, color: "#E27A7A", margin: "0 0 8px 0" }}>{noteError}</p>}
-                  <button onClick={handleAddNote} style={{ fontSize: 12.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 7, padding: "7px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Add note</button>
+                  <button onClick={handleAddNote} style={{ fontSize: 12.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 7, padding: "7px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Add Note</button>
                 </div>
               )}
 
@@ -323,12 +323,12 @@ function ReviewQueueSection({ t }) {
 
               {selected.status === "pending" && rejectMode && (
                 <div style={{ marginTop: 8 }}>
-                  <label style={labelStyle}>Rejection reason (required)</label>
+                  <label style={labelStyle}>Rejection Reason (required)</label>
                   <textarea value={rejectReason} onChange={(e) => { setRejectReason(e.target.value); if (rejectError) setRejectError(""); }} rows={3}
                     style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: 13.5, fontFamily: "'Roboto', sans-serif", color: t.textPrimary, background: t.inputBg, border: `1px solid ${rejectError ? "#C24747" : t.border}`, borderRadius: 8, outline: "none", resize: "vertical", marginBottom: 6 }} />
                   {rejectError && <p style={{ fontSize: 12, color: "#E27A7A", margin: "0 0 10px 0" }}>{rejectError}</p>}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={handleRejectConfirm} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#FFFFFF", background: "#C24747", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm rejection</button>
+                    <button onClick={handleRejectConfirm} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#FFFFFF", background: "#C24747", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm Rejection</button>
                     <button onClick={() => { setRejectMode(false); setRejectReason(""); setRejectError(""); }} style={{ flex: 1, padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
                   </div>
                 </div>
@@ -533,17 +533,17 @@ function RestrictionManagerSection({ t, onGoToVip }) {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 18 }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>Restriction manager</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>Restriction Manager</h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, maxWidth: 480 }}>
             {activeCount} active restriction{activeCount === 1 ? "" : "s"}. Neither the brand nor the customer is ever notified that a restriction exists.
           </p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onGoToVip} style={{ fontSize: 13, fontWeight: 500, color: tokens.gold, background: "transparent", border: `1px solid ${tokens.gold}`, borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>
-            VIP talent contracts \u2192
+            VIP Talent Contracts \u2192
           </button>
           <button onClick={() => setShowNewForm((v) => !v)} style={{ fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, padding: "10px 16px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>
-            {showNewForm ? "Cancel" : "+ New restriction"}
+            {showNewForm ? "Cancel" : "+ New Restriction"}
           </button>
         </div>
       </div>
@@ -563,7 +563,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
         Restrictions block a customer from a brand. For VIP-tier talent, brand access works the
         opposite way — blocked by default until explicitly unlocked. See{" "}
         <span onClick={onGoToVip} style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}>
-          VIP talent contracts
+          VIP Talent Contracts
         </span>{" "}
         for that.
       </div>
@@ -576,12 +576,12 @@ function RestrictionManagerSection({ t, onGoToVip }) {
 
       {showNewForm && (
         <form onSubmit={handleCreate} style={{ background: t.surface, border: `1px solid ${tokens.gold}`, borderRadius: 12, padding: "20px 22px", marginBottom: 18 }}>
-          <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>New restriction</p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>New Restriction</p>
           <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Customer</label>
               <select value={draft.customerId} onChange={(e) => setDraft((d) => ({ ...d, customerId: e.target.value }))} style={inputStyle(draftErrors.customerId)}>
-                <option value="">Select customer…</option>
+                <option value="">Select Customer…</option>
                 {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {draftErrors.customerId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.customerId}</p>}
@@ -589,7 +589,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Brand</label>
               <select value={draft.brandId} onChange={(e) => setDraft((d) => ({ ...d, brandId: e.target.value }))} style={inputStyle(draftErrors.brandId)}>
-                <option value="">Select brand…</option>
+                <option value="">Select Brand…</option>
                 {allBrands.map((b) => <option key={b.id} value={b.id}>{b.brand_name}</option>)}
               </select>
               {draftErrors.brandId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.brandId}</p>}
@@ -602,14 +602,14 @@ function RestrictionManagerSection({ t, onGoToVip }) {
             {draftErrors.reason && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.reason}</p>}
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Internal notes (optional)</label>
+            <label style={labelStyle}>Internal Notes (optional)</label>
             <textarea value={draft.notes} onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))} rows={2} placeholder="Any additional context for other platform admins." style={{ ...inputStyle(false), resize: "vertical" }} />
           </div>
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Duration</label>
             <div style={{ display: "flex", gap: 8, marginBottom: draft.isPermanent ? 0 : 10 }}>
               <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: true }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: draft.isPermanent ? tokens.gold : t.textPrimary }}>Permanent</button>
-              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: false }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: !draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: !draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: !draft.isPermanent ? tokens.gold : t.textPrimary }}>Expires on a date</button>
+              <button type="button" onClick={() => setDraft((d) => ({ ...d, isPermanent: false }))} style={{ flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 500, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: !draft.isPermanent ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: !draft.isPermanent ? "rgba(185,129,40,0.12)" : "transparent", color: !draft.isPermanent ? tokens.gold : t.textPrimary }}>Expires on a Date</button>
             </div>
             {!draft.isPermanent && <input type="date" value={draft.expiresAt} onChange={(e) => setDraft((d) => ({ ...d, expiresAt: e.target.value }))} style={inputStyle(draftErrors.expiresAt)} />}
             {draftErrors.expiresAt && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.expiresAt}</p>}
@@ -617,7 +617,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
           <div style={{ background: "rgba(185,129,40,0.08)", border: "1px solid rgba(185,129,40,0.25)", borderRadius: 8, padding: "9px 12px", marginBottom: 16, fontSize: 11.5, color: t.textSecondary, lineHeight: 1.5 }}>
             If this customer has an active, unconsumed gifting allowance with this brand, it will be frozen (not forfeited) at the moment this restriction is created.
           </div>
-          <button type="submit" disabled={isSaving} style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : "Create restriction"}</button>
+          <button type="submit" disabled={isSaving} style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : "Create Restriction"}</button>
         </form>
       )}
 
@@ -648,32 +648,32 @@ function RestrictionManagerSection({ t, onGoToVip }) {
                 </span>
               </div>
               <div style={{ background: t.surfaceRaised, border: `1px solid ${t.border}`, borderRadius: 8, padding: "10px 14px", marginBottom: r.frozenAllowanceSnapshot ? 10 : 0 }}>
-                <span style={{ fontSize: 11.5, fontWeight: 500, color: t.textSecondary }}>Reason (internal only)</span>
+                <span style={{ fontSize: 11.5, fontWeight: 500, color: t.textSecondary }}>Reason (Internal Only)</span>
                 <p style={{ fontSize: 13, color: t.textPrimary, margin: "4px 0 0 0" }}>{r.reason}</p>
                 {r.notes && <p style={{ fontSize: 12, color: t.textSecondary, margin: "6px 0 0 0" }}>Notes: {r.notes}</p>}
               </div>
               {r.frozenAllowanceSnapshot && (
                 <div style={{ background: "rgba(185,129,40,0.08)", border: "1px solid rgba(185,129,40,0.25)", borderRadius: 8, padding: "9px 14px", marginBottom: removed ? 10 : 0 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold }}>Frozen allowance snapshot</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold }}>Frozen Allowance Snapshot</span>
                   <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "4px 0 0 0" }}>{r.frozenAllowanceSnapshot.consumed.toLocaleString()} used of {r.frozenAllowanceSnapshot.limit.toLocaleString()} {r.frozenAllowanceSnapshot.currency} — frozen, not forfeited.</p>
                 </div>
               )}
               {removed && (
                 <div style={{ borderTop: `1px solid ${t.border}`, paddingTop: 10, marginTop: 10 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 500, color: t.textSecondary }}>Removal record</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 500, color: t.textSecondary }}>Removal Record</span>
                   <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "4px 0 0 0" }}>Removed {formatDate(r.removedAt)} — {r.removalReason}</p>
                 </div>
               )}
               {!removed && removingId !== r.id && (
-                <button onClick={() => openRemoval(r.id)} style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Remove restriction</button>
+                <button onClick={() => openRemoval(r.id)} style={{ marginTop: 12, fontSize: 12, fontWeight: 500, color: "#E27A7A", background: "transparent", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 7, padding: "7px 13px", cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Remove Restriction</button>
               )}
               {removingId === r.id && (
                 <div style={{ marginTop: 12 }}>
-                  <label style={labelStyle}>Removal reason (required for audit trail)</label>
+                  <label style={labelStyle}>Removal Reason (required for audit trail)</label>
                   <textarea value={removalReason} onChange={(e) => { setRemovalReason(e.target.value); if (removalError) setRemovalError(""); }} rows={2} placeholder="e.g. Sponsorship conflict resolved." style={{ ...inputStyle(!!removalError), resize: "vertical", marginBottom: 8 }} />
                   {removalError && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "0 0 8px 0" }}>{removalError}</p>}
                   <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={confirmRemoval} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm removal</button>
+                    <button onClick={confirmRemoval} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Confirm Removal</button>
                     <button onClick={() => setRemovingId(null)} style={{ flex: 1, padding: "9px 0", fontSize: 12.5, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
                   </div>
                 </div>
@@ -753,7 +753,7 @@ function VipContractsSection({ t }) {
 
   const statusBadge = (status) => {
     const map = {
-      none: { bg: t.surfaceRaised, color: t.textSecondary, label: "No contract on file" },
+      none: { bg: t.surfaceRaised, color: t.textSecondary, label: "No Contract on File" },
       pending: { bg: "rgba(226,162,58,0.14)", color: "#E2A23A", label: "Pending" },
       executed: { bg: "rgba(99,153,34,0.16)", color: "#8FBF5A", label: "Executed" },
       expired: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Expired" },
@@ -868,12 +868,12 @@ function VipContractsSection({ t }) {
 
   const renderForm = (onSubmit, isEdit) => (
     <form onSubmit={onSubmit} style={{ background: t.surface, border: `1px solid ${tokens.gold}`, borderRadius: 12, padding: "18px 20px", marginBottom: 14 }}>
-      <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>{isEdit ? `Edit ${brandName(draft.brandId)} contract` : "New brand × VIP contract record"}</p>
+      <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>{isEdit ? `Edit ${brandName(draft.brandId)} Contract` : "New Brand × VIP Contract Record"}</p>
       {!isEdit && (
         <div style={{ marginBottom: 14 }}>
           <label style={labelStyle}>Brand</label>
           <select value={draft.brandId} onChange={(e) => setDraft((d) => ({ ...d, brandId: e.target.value }))} style={inputStyle(draftErrors.brandId)}>
-            <option value="">Select brand…</option>
+            <option value="">Select Brand…</option>
             {availableBrands.map((b) => <option key={b.id} value={b.id}>{b.brand_name}</option>)}
           </select>
           {draftErrors.brandId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.brandId}</p>}
@@ -881,22 +881,22 @@ function VipContractsSection({ t }) {
         </div>
       )}
       <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Contract status</label>
+        <label style={labelStyle}>Contract Status</label>
         <select value={draft.contractStatus} onChange={(e) => setDraft((d) => ({ ...d, contractStatus: e.target.value }))} style={inputStyle(false)}>
           {CONTRACT_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
         </select>
       </div>
       <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Contract terms <span style={{ color: t.textSecondary, fontWeight: 400 }}>— descriptive reference only, no financial figures tracked here</span></label>
+        <label style={labelStyle}>Contract Terms <span style={{ color: t.textSecondary, fontWeight: 400 }}>— descriptive reference only, no financial figures tracked here</span></label>
         <textarea value={draft.contractTerms} onChange={(e) => setDraft((d) => ({ ...d, contractTerms: e.target.value }))} rows={2} placeholder="e.g. 12-month gifting agreement, executed 5/14/2026." style={{ ...inputStyle(false), resize: "vertical" }} />
       </div>
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Internal notes</label>
+        <label style={labelStyle}>Internal Notes</label>
         <textarea value={draft.notes} onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))} rows={2} placeholder="Any context for other platform admins." style={{ ...inputStyle(false), resize: "vertical" }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: t.surfaceRaised, border: `1px solid ${t.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
         <div>
-          <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 2px 0" }}>Unlock this brand for this VIP</p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 2px 0" }}>Unlock This Brand for This VIP</p>
           <p style={{ fontSize: 11.5, color: t.textSecondary, margin: 0, maxWidth: 380 }}>This is the actual switch controlling access — independent of contract status.</p>
         </div>
         <button type="button" onClick={() => setDraft((d) => ({ ...d, unlocked: !d.unlocked }))} style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: draft.unlocked ? tokens.gold : t.border, position: "relative", marginLeft: 16 }}>
@@ -904,7 +904,7 @@ function VipContractsSection({ t }) {
         </button>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
-        <button type="submit" disabled={isSaving} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : isEdit ? "Save changes" : "Create record"}</button>
+        <button type="submit" disabled={isSaving} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : isEdit ? "Save Changes" : "Create Record"}</button>
         <button type="button" onClick={() => { setShowNewForm(false); setEditingId(null); resetDraft(); }} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
       </div>
     </form>
@@ -913,7 +913,7 @@ function VipContractsSection({ t }) {
   return (
     <div>
       <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>VIP talent contracts</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>VIP Talent Contracts</h1>
         <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, maxWidth: 560 }}>
           Governs which brands can see and engage your VIP-tier roster. A VIP customer is invisible to a brand until explicitly unlocked here.
         </p>
@@ -940,7 +940,7 @@ function VipContractsSection({ t }) {
       {!isLoading && vipCustomers.length > 0 && (
       <div style={{ display: "flex", gap: 16 }}>
         <div style={{ flex: "0 0 240px", background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${t.border}`, fontSize: 12, fontWeight: 500, color: t.textSecondary }}>VIP roster ({vipCustomers.length})</div>
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${t.border}`, fontSize: 12, fontWeight: 500, color: t.textSecondary }}>VIP Roster ({vipCustomers.length})</div>
           {vipCustomers.map((c, idx) => {
             const isSelected = c.id === selectedVipId;
             const activeUnlocks = contracts.filter((ct) => ct.customerId === c.id && ct.unlocked).length;
@@ -962,7 +962,7 @@ function VipContractsSection({ t }) {
                   <span style={{ fontSize: 11, fontWeight: 500, color: tokens.gold, background: "rgba(185,129,40,0.14)", padding: "2px 8px", borderRadius: 5 }}>VIP</span>
                 </div>
                 {!showNewForm && !editingId && availableBrands.length > 0 && (
-                  <button onClick={openNewForm} style={{ fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>+ New contract record</button>
+                  <button onClick={openNewForm} style={{ fontSize: 12.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 7, padding: "8px 14px", cursor: "pointer", fontFamily: "'Roboto', sans-serif", whiteSpace: "nowrap" }}>+ New Contract Record</button>
                 )}
               </div>
               {showNewForm && renderForm(handleSaveNew, false)}
@@ -1024,9 +1024,9 @@ export default function PlatformAdminDashboard() {
   };
 
   const NAV_ITEMS = [
-    { key: "review_queue", label: "Review queue" },
-    { key: "restrictions", label: "Restriction manager" },
-    { key: "vip_contracts", label: "VIP talent contracts" },
+    { key: "review_queue", label: "Review Queue" },
+    { key: "restrictions", label: "Restriction Manager" },
+    { key: "vip_contracts", label: "VIP Talent Contracts" },
   ];
 
   return (
@@ -1056,7 +1056,7 @@ export default function PlatformAdminDashboard() {
             <span style={{ fontSize: 16, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
           </div>
           <span style={{ fontSize: 10.5, fontWeight: 500, color: t.textSecondary, letterSpacing: "0.04em" }}>
-            PLATFORM ADMIN
+            Platform Admin
           </span>
         </div>
 
@@ -1092,24 +1092,6 @@ export default function PlatformAdminDashboard() {
         <div style={{ flex: 1 }} />
 
         <button
-          onClick={handleSignOut}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "7px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-            marginBottom: 8,
-          }}
-        >
-          Sign out
-        </button>
-
-        <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           style={{
             fontSize: 11,
@@ -1124,9 +1106,36 @@ export default function PlatformAdminDashboard() {
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
+
+      {/* Fixed rather than sidebar-bottom - the sidebar stretches to match
+          the height of whatever's in the main content column, so a long
+          review queue or restriction list pushed this off the bottom of
+          the screen entirely. Pinning it to the viewport keeps it
+          reachable no matter how long the page is (same fix as
+          BrandNav.jsx). */}
+      <button
+        onClick={handleSignOut}
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 20,
+          zIndex: 50,
+          fontSize: 11,
+          fontWeight: 500,
+          color: t.textSecondary,
+          background: t.surface,
+          border: `1px solid ${t.border}`,
+          borderRadius: 6,
+          padding: "7px 10px",
+          cursor: "pointer",
+          fontFamily: "'Roboto', sans-serif",
+        }}
+      >
+        Sign Out
+      </button>
 
       {/* Main content */}
       <div style={{ flex: 1, padding: "28px 32px", overflow: "auto" }}>

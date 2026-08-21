@@ -44,7 +44,7 @@ const MOCK_BRANDS = [
 ];
 
 const CONTRACT_STATUSES = [
-  { key: "none", label: "No contract on file" },
+  { key: "none", label: "No Contract on File" },
   { key: "pending", label: "Pending" },
   { key: "executed", label: "Executed" },
   { key: "expired", label: "Expired" },
@@ -117,7 +117,7 @@ export default function VipTalentContracts() {
 
   const statusBadge = (status) => {
     const map = {
-      none: { bg: t.surfaceRaised, color: t.textSecondary, label: "No contract on file" },
+      none: { bg: t.surfaceRaised, color: t.textSecondary, label: "No Contract on File" },
       pending: { bg: "rgba(226,162,58,0.14)", color: "#E2A23A", label: "Pending" },
       executed: { bg: "rgba(99,153,34,0.16)", color: "#8FBF5A", label: "Executed" },
       expired: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Expired" },
@@ -264,7 +264,7 @@ export default function VipTalentContracts() {
       }}
     >
       <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>
-        {isEdit ? `Edit ${brandName(draft.brandId)} contract` : "New brand \u00d7 VIP contract record"}
+        {isEdit ? `Edit ${brandName(draft.brandId)} Contract` : "New Brand \u00d7 VIP Contract Record"}
       </p>
 
       {!isEdit && (
@@ -275,7 +275,7 @@ export default function VipTalentContracts() {
             onChange={(e) => setDraft((d) => ({ ...d, brandId: e.target.value }))}
             style={inputStyle(draftErrors.brandId)}
           >
-            <option value="">Select brand\u2026</option>
+            <option value="">Select Brand\u2026</option>
             {availableBrands.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.name}
@@ -296,7 +296,7 @@ export default function VipTalentContracts() {
       )}
 
       <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Contract status</label>
+        <label style={labelStyle}>Contract Status</label>
         <select
           value={draft.contractStatus}
           onChange={(e) => setDraft((d) => ({ ...d, contractStatus: e.target.value }))}
@@ -312,7 +312,7 @@ export default function VipTalentContracts() {
 
       <div style={{ marginBottom: 14 }}>
         <label style={labelStyle}>
-          Contract terms{" "}
+          Contract Terms{" "}
           <span style={{ color: t.textSecondary, fontWeight: 400 }}>
             — descriptive reference only, no financial figures tracked here
           </span>
@@ -327,7 +327,7 @@ export default function VipTalentContracts() {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Internal notes</label>
+        <label style={labelStyle}>Internal Notes</label>
         <textarea
           value={draft.notes}
           onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
@@ -351,7 +351,7 @@ export default function VipTalentContracts() {
       >
         <div>
           <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 2px 0" }}>
-            Unlock this brand for this VIP
+            Unlock This Brand for This VIP
           </p>
           <p style={{ fontSize: 11.5, color: t.textSecondary, margin: 0, maxWidth: 380 }}>
             This is the actual switch controlling access \u2014 independent of contract status.
@@ -404,7 +404,7 @@ export default function VipTalentContracts() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {isEdit ? "Save changes" : "Create record"}
+          {isEdit ? "Save Changes" : "Create Record"}
         </button>
         <button
           type="button"
@@ -466,7 +466,7 @@ export default function VipTalentContracts() {
               letterSpacing: "0.03em",
             }}
           >
-            PLATFORM ADMIN
+            Platform Admin
           </span>
         </div>
         <button
@@ -483,7 +483,7 @@ export default function VipTalentContracts() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -501,7 +501,7 @@ export default function VipTalentContracts() {
           <h1
             style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}
           >
-            VIP talent contracts
+            VIP Talent Contracts
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, maxWidth: 560 }}>
             Governs which brands can see and engage your VIP-tier roster. A VIP customer is
@@ -530,7 +530,7 @@ export default function VipTalentContracts() {
                 color: t.textSecondary,
               }}
             >
-              VIP roster ({vipCustomers.length})
+              VIP Roster ({vipCustomers.length})
             </div>
             {vipCustomers.map((c, idx) => {
               const isSelected = c.id === selectedVipId;
@@ -610,7 +610,7 @@ export default function VipTalentContracts() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      + New contract record
+                      + New Contract Record
                     </button>
                   )}
                 </div>

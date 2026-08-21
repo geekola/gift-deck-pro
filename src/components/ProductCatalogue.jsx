@@ -160,7 +160,7 @@ export default function ProductCatalogue() {
               letterSpacing: "0.03em",
             }}
           >
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -178,7 +178,7 @@ export default function ProductCatalogue() {
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -204,7 +204,7 @@ export default function ProductCatalogue() {
             <h1
               style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}
             >
-              Product catalogue
+              Product Catalogue
             </h1>
             <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
               {filtered.length} of {products.length} products
@@ -225,7 +225,7 @@ export default function ProductCatalogue() {
               whiteSpace: "nowrap",
             }}
           >
-            + Add product
+            + Add Product
           </button>
         </div>
 
@@ -251,7 +251,7 @@ export default function ProductCatalogue() {
             { key: "all", label: "All" },
             { key: "active", label: "Active" },
             { key: "inactive", label: "Inactive" },
-            { key: "made_to_order", label: "Made to order" },
+            { key: "made_to_order", label: "Made to Order" },
           ].map((f) => {
             const active = filter === f.key;
             return (
@@ -363,7 +363,7 @@ export default function ProductCatalogue() {
                             whiteSpace: "nowrap",
                           }}
                         >
-                          Made to order
+                          Made to Order
                         </span>
                       )}
                     </div>
@@ -407,7 +407,7 @@ export default function ProductCatalogue() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {isActive ? "Active" : "Out of stock"}
+                      {isActive ? "Active" : "Out of Stock"}
                     </span>
                     {lowStockVariants.length > 0 && (
                       <span
@@ -418,7 +418,7 @@ export default function ProductCatalogue() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        Low stock · {lowStockVariants.length}{" "}
+                        Low Stock · {lowStockVariants.length}{" "}
                         {lowStockVariants.length === 1 ? "size" : "sizes"}
                       </span>
                     )}
@@ -446,7 +446,7 @@ export default function ProductCatalogue() {
                   >
                     {product.isMadeToOrder ? (
                       <div style={{ marginBottom: 10 }}>
-                        <span style={labelStyle}>Delivery window</span>
+                        <span style={labelStyle}>Delivery Window</span>
                         <p style={{ fontSize: 13.5, color: t.textPrimary, margin: "3px 0 0 0" }}>
                           {product.deliveryWindow}
                         </p>
@@ -456,7 +456,7 @@ export default function ProductCatalogue() {
                       </div>
                     ) : (
                       <p style={{ ...labelStyle, marginBottom: 8, display: "block" }}>
-                        Sizes (variants){" "}
+                        Sizes (Variants){" "}
                         {product.erpSynced && (
                           <span style={{ color: t.textSecondary, fontWeight: 400 }}>
                             — read-only, mirrored from ERP

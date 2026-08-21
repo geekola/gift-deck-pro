@@ -54,23 +54,23 @@ function mapNotification(row) {
 }
 
 const DOC_LABELS = {
-  packing_slip: "Packing slip",
-  order_form_invoice: "Order form / invoice",
-  return_info: "Return info",
+  packing_slip: "Packing Slip",
+  order_form_invoice: "Order Form / Invoice",
+  return_info: "Return Info",
 };
 
 const STATE_LABELS = {
-  submitted: "New request",
-  invoiced: "Sent to you",
+  submitted: "New Request",
+  invoiced: "Sent to You",
   confirmed: "Confirmed",
   dispatched: "Dispatched",
   declined: "Declined",
 };
 
 const NEXT_ACTION_LABEL = {
-  submitted: "Mark as invoiced",
-  invoiced: "Mark as confirmed",
-  confirmed: "Mark as dispatched",
+  submitted: "Mark as Invoiced",
+  invoiced: "Mark as Confirmed",
+  confirmed: "Mark as Dispatched",
 };
 
 function formatDateTime(iso) {
@@ -260,7 +260,7 @@ export default function BrandDocumentNotifications() {
             Gift Deck Pro
           </span>
           <span style={{ fontSize: 11, fontWeight: 500, color: t.textSecondary, letterSpacing: "0.03em" }}>
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -277,7 +277,7 @@ export default function BrandDocumentNotifications() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -288,7 +288,7 @@ export default function BrandDocumentNotifications() {
           />
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: 0 }}>
-              Order documents
+              Order Documents
             </h1>
             {unreadCount > 0 && (
               <span
@@ -538,7 +538,7 @@ export default function BrandDocumentNotifications() {
                           disabled={busyId === n.id}
                           style={{ ...buttonStyle, background: "#C24747", opacity: busyId === n.id ? 0.6 : 1 }}
                         >
-                          {busyId === n.id ? "Working…" : "Confirm decline"}
+                          {busyId === n.id ? "Working…" : "Confirm Decline"}
                         </button>
                         <button
                           onClick={() => {

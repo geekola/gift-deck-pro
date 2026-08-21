@@ -343,7 +343,7 @@ export default function ProductForm() {
             }}
           />
           <h1 style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, margin: "0 0 8px 0" }}>
-            Product saved
+            Product Saved
           </h1>
           <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 22px 0" }}>
             "{form.name}" was added to your catalogue.
@@ -363,7 +363,7 @@ export default function ProductForm() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to catalogue
+              Back to Catalogue
             </button>
             <button
               onClick={() => {
@@ -399,7 +399,7 @@ export default function ProductForm() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Add another
+              Add Another
             </button>
           </div>
         </div>
@@ -441,7 +441,7 @@ export default function ProductForm() {
               letterSpacing: "0.03em",
             }}
           >
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -460,7 +460,7 @@ export default function ProductForm() {
             }}
             title="Stock for this item is mirrored from an external ERP instead of tracked manually — stock quantity fields become read-only"
           >
-            {erpSyncEnabled ? "ERP-synced item" : "Manual stock"}
+            {erpSyncEnabled ? "ERP-Synced Item" : "Manual Stock"}
           </button>
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -476,7 +476,7 @@ export default function ProductForm() {
               fontFamily: "'Roboto', sans-serif",
             }}
           >
-            {theme === "dark" ? "Preview: light" : "Preview: dark"}
+            {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
           </button>
         </div>
       </div>
@@ -493,7 +493,7 @@ export default function ProductForm() {
             }}
           />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>
-            Add product
+            Add Product
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
             All fields enforce the current schema rules live as you fill them in.
@@ -527,10 +527,10 @@ export default function ProductForm() {
               marginBottom: 16,
             }}
           >
-            <p style={sectionTitleStyle}>Basic information</p>
+            <p style={sectionTitleStyle}>Basic Information</p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Product name</label>
+              <label style={labelStyle}>Product Name</label>
               <input
                 type="text"
                 value={form.name}
@@ -612,10 +612,10 @@ export default function ProductForm() {
               marginBottom: 16,
             }}
           >
-            <p style={sectionTitleStyle}>Pricing &amp; item type</p>
+            <p style={sectionTitleStyle}>Pricing &amp; Item Type</p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Item type</label>
+              <label style={labelStyle}>Item Type</label>
               <div style={{ display: "flex", gap: 8 }}>
                 {[
                   { key: "gift", label: "Gift" },
@@ -649,7 +649,7 @@ export default function ProductForm() {
 
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Cost price (internal — never shown to customer)</label>
+                <label style={labelStyle}>Cost Price (internal — never shown to customer)</label>
                 <input
                   type="number"
                   value={form.costPrice}
@@ -666,7 +666,7 @@ export default function ProductForm() {
               </div>
               <div style={{ flex: 1 }}>
                 <label style={labelStyle}>
-                  Retail price {form.itemType === "purchase" ? "(required)" : "(n/a for gift items)"}
+                  Retail Price {form.itemType === "purchase" ? "(required)" : "(n/a for gift items)"}
                 </label>
                 <input
                   type="number"
@@ -704,7 +704,7 @@ export default function ProductForm() {
 
             {form.itemType === "purchase" && (
               <div>
-                <label style={labelStyle}>Return policy (required for purchase items)</label>
+                <label style={labelStyle}>Return Policy (required for purchase items)</label>
                 <textarea
                   value={form.returnPolicy}
                   onChange={(e) => setField("returnPolicy", e.target.value)}
@@ -744,7 +744,7 @@ export default function ProductForm() {
               }}
             >
               <div>
-                <p style={{ ...sectionTitleStyle, margin: 0 }}>Made to order</p>
+                <p style={{ ...sectionTitleStyle, margin: 0 }}>Made to Order</p>
                 <p style={{ fontSize: 12, color: t.textSecondary, margin: "4px 0 0 0", maxWidth: 440 }}>
                   Independent of category — any of the four categories may be made-to-order.
                   No stock tracking applies; item is always treated as available.
@@ -782,7 +782,7 @@ export default function ProductForm() {
 
             {form.isMadeToOrder && (
               <div>
-                <label style={labelStyle}>Delivery window (mandatory)</label>
+                <label style={labelStyle}>Delivery Window (mandatory)</label>
                 <input
                   type="text"
                   value={form.deliveryWindow}
@@ -937,7 +937,7 @@ export default function ProductForm() {
               marginBottom: 20,
             }}
           >
-            <p style={sectionTitleStyle}>Sizes (variants)</p>
+            <p style={sectionTitleStyle}>Sizes (Variants)</p>
 
             {erpSyncEnabled && !form.isMadeToOrder && (
               <p
@@ -999,7 +999,7 @@ export default function ProductForm() {
                 <div style={{ flex: 1 }}>
                   {idx === 0 && (
                     <label style={labelStyle}>
-                      Stock qty{" "}
+                      Stock Qty{" "}
                       {form.isMadeToOrder || erpSyncEnabled ? "(n/a)" : "(required)"}
                     </label>
                   )}
@@ -1021,7 +1021,7 @@ export default function ProductForm() {
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  {idx === 0 && <label style={labelStyle}>Low-stock alert</label>}
+                  {idx === 0 && <label style={labelStyle}>Low-Stock Alert</label>}
                   <input
                     type="number"
                     value={v.lowStockThreshold}
@@ -1079,7 +1079,7 @@ export default function ProductForm() {
                 marginTop: 4,
               }}
             >
-              + Add size
+              + Add Size
             </button>
           </div>
 
@@ -1100,7 +1100,7 @@ export default function ProductForm() {
               opacity: isSubmitting || isUploading || !brandId ? 0.7 : 1,
             }}
           >
-            {isSubmitting ? "Saving…" : "Save product"}
+            {isSubmitting ? "Saving…" : "Save Product"}
           </button>
         </form>
       </div>

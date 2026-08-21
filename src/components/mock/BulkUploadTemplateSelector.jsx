@@ -293,7 +293,7 @@ export default function BulkUploadTemplateSelector() {
               letterSpacing: "0.03em",
             }}
           >
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -310,7 +310,7 @@ export default function BulkUploadTemplateSelector() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -328,7 +328,7 @@ export default function BulkUploadTemplateSelector() {
           <h1
             style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}
           >
-            Bulk upload
+            Bulk Upload
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, maxWidth: 480 }}>
             Download the template matching your product category, fill it in, then upload it
@@ -353,7 +353,7 @@ export default function BulkUploadTemplateSelector() {
               margin: "0 0 14px 0",
             }}
           >
-            1. Choose your product category
+            1. Choose Your Product Category
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -430,7 +430,7 @@ export default function BulkUploadTemplateSelector() {
                 margin: "0 0 4px 0",
               }}
             >
-              2. Download the {selectedCategory} template
+              2. Download the {selectedCategory} Template
             </p>
             <p style={{ fontSize: 12, color: t.textSecondary, margin: "0 0 14px 0" }}>
               Includes an instructions tab, column reference, and one filled-in example row.
@@ -495,7 +495,7 @@ export default function BulkUploadTemplateSelector() {
                   margin: "0 0 10px 0",
                 }}
               >
-                3. Upload your completed file
+                3. Upload Your Completed File
               </p>
 
               <input
@@ -554,7 +554,7 @@ export default function BulkUploadTemplateSelector() {
                     marginTop: 10,
                   }}
                 >
-                  Remove file
+                  Remove File
                 </button>
               )}
 

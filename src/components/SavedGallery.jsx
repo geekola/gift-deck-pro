@@ -215,7 +215,7 @@ export default function SavedGallery() {
               fontFamily: "'Roboto', sans-serif",
             }}
           >
-            ← Back to saved
+            ← Back to Saved
           </button>
         </div>
       </div>
@@ -351,7 +351,7 @@ export default function SavedGallery() {
                     padding: 0,
                   }}
                 >
-                  {allSelected ? "Deselect all" : "Select all"}
+                  {allSelected ? "Deselect All" : "Select All"}
                 </button>
               </div>
 
@@ -440,7 +440,7 @@ export default function SavedGallery() {
                           </span>
                           {item.isMadeToOrder && (
                             <span style={{ fontSize: 10.5, color: t.textSecondary }}>
-                              · Made to order
+                              · Made to Order
                             </span>
                           )}
                         </div>

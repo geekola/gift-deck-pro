@@ -141,26 +141,26 @@ export default function BrowseBrands() {
         return (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 11.5, fontWeight: 500, color: "#8FBF5A", background: "rgba(99,153,34,0.16)", padding: "4px 10px", borderRadius: 6 }}>
-              Access granted
+              Access Granted
             </span>
             <button
               onClick={() => router.push("/customer/categories")}
               style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold, background: "transparent", border: "none", cursor: "pointer", fontFamily: "'Roboto', sans-serif", padding: 0 }}
             >
-              Browse catalogue →
+              Browse Catalogue →
             </button>
           </div>
         );
       case "unactioned":
         return (
           <span style={{ fontSize: 11.5, fontWeight: 500, color: tokens.gold, background: "rgba(185,129,40,0.14)", padding: "4px 10px", borderRadius: 6, whiteSpace: "nowrap" }}>
-            Requested — pending review
+            Requested — Pending Review
           </span>
         );
       case "denied":
         return (
           <span style={{ fontSize: 11.5, fontWeight: 500, color: "#E27A7A", background: "rgba(194,71,71,0.14)", padding: "4px 10px", borderRadius: 6, whiteSpace: "nowrap" }}>
-            Access denied
+            Access Denied
           </span>
         );
       default:
@@ -182,7 +182,7 @@ export default function BrowseBrands() {
               opacity: requestingId === brand.id ? 0.6 : 1,
             }}
           >
-            {requestingId === brand.id ? "Requesting…" : "Request access"}
+            {requestingId === brand.id ? "Requesting…" : "Request Access"}
           </button>
         );
     }
@@ -226,7 +226,7 @@ export default function BrowseBrands() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -234,7 +234,7 @@ export default function BrowseBrands() {
         <div style={{ marginBottom: 20 }}>
           <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            Browse brands
+            Browse Brands
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
             Request access to a brand's catalogue. Open brands approve instantly; others review your

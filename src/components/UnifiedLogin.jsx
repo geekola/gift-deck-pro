@@ -272,7 +272,7 @@ export default function UnifiedLogin() {
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -309,7 +309,7 @@ export default function UnifiedLogin() {
                 style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
               />
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                Welcome back
+                Welcome Back
               </h1>
               <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 Sign in to your customer or brand account.
@@ -385,7 +385,7 @@ export default function UnifiedLogin() {
                   }}
                   style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
                 >
-                  Forgot password?
+                  Forgot Password?
                 </span>
               </p>
               <button
@@ -405,7 +405,7 @@ export default function UnifiedLogin() {
                   opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {isSubmitting ? "Signing in…" : "Sign in"}
+                {isSubmitting ? "Signing in…" : "Sign In"}
               </button>
             </form>
 
@@ -415,7 +415,7 @@ export default function UnifiedLogin() {
                 onClick={() => router.push("/sign-up")}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
-                Get started
+                Get Started
               </span>
             </p>
           </>
@@ -428,7 +428,7 @@ export default function UnifiedLogin() {
                 style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
               />
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                Reset your password
+                Reset Your Password
               </h1>
               <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 Enter your email and we'll send you a link to set a new password.
@@ -463,7 +463,7 @@ export default function UnifiedLogin() {
                   opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {isSubmitting ? "Sending…" : "Send reset link"}
+                {isSubmitting ? "Sending…" : "Send Reset Link"}
               </button>
             </form>
 
@@ -475,7 +475,7 @@ export default function UnifiedLogin() {
                 }}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
-                Back to sign in
+                Back to Sign In
               </span>
             </p>
           </>
@@ -501,7 +501,7 @@ export default function UnifiedLogin() {
             </div>
 
             <h1 style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-              Check your email
+              Check Your Email
             </h1>
 
             <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 22px 0", lineHeight: 1.5 }}>
@@ -526,7 +526,7 @@ export default function UnifiedLogin() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}
@@ -535,7 +535,7 @@ export default function UnifiedLogin() {
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, margin: "0 auto 20px auto" }} />
             <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
-              Application received
+              Application Received
             </h1>
             <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
               A platform admin will review your brand application. You'll get an email at the
@@ -553,7 +553,7 @@ export default function UnifiedLogin() {
                 marginBottom: 24,
               }}
             >
-              Status: <span style={{ color: tokens.gold, fontWeight: 500 }}>Pending review</span>
+              Status: <span style={{ color: tokens.gold, fontWeight: 500 }}>Pending Review</span>
             </div>
             <button
               onClick={() => setMode("login")}
@@ -569,7 +569,7 @@ export default function UnifiedLogin() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}
@@ -578,7 +578,7 @@ export default function UnifiedLogin() {
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ width: 28, height: 3, background: "#C24747", borderRadius: 2, margin: "0 auto 20px auto" }} />
             <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
-              Application not approved
+              Application Not Approved
             </h1>
             <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 16px 0" }}>
               A platform admin reviewed your brand application and it wasn't approved for portal
@@ -597,7 +597,7 @@ export default function UnifiedLogin() {
               }}
             >
               <div style={{ marginBottom: rejectionReason ? 8 : 0 }}>
-                Status: <span style={{ color: "#C24747", fontWeight: 500 }}>Not approved</span>
+                Status: <span style={{ color: "#C24747", fontWeight: 500 }}>Not Approved</span>
               </div>
               {rejectionReason && (
                 <div>
@@ -624,7 +624,7 @@ export default function UnifiedLogin() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}

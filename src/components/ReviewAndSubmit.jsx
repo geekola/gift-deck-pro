@@ -339,7 +339,7 @@ export default function ReviewAndSubmit() {
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 14 }}
           />
           <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            Submission results
+            Submission Results
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 20px 0", lineHeight: 1.6 }}>
             Each brand's request is evaluated on its own — one brand passing or failing has no
@@ -378,7 +378,7 @@ export default function ReviewAndSubmit() {
                     borderRadius: 6,
                   }}
                 >
-                  {r.passed ? "Submitted → Invoiced" : "Couldn't go through"}
+                  {r.passed ? "Submitted → Invoiced" : "Couldn't Go Through"}
                 </span>
               </div>
 
@@ -454,7 +454,7 @@ export default function ReviewAndSubmit() {
               fontFamily: "'Roboto', sans-serif",
             }}
           >
-            Back to saved
+            Back to Saved
           </button>
         </div>
       </div>
@@ -702,7 +702,7 @@ export default function ReviewAndSubmit() {
                     padding: "12px 14px",
                   }}
                 >
-                  <p style={labelStyle}>Shipping address</p>
+                  <p style={labelStyle}>Shipping Address</p>
                   {chosenAddress ? (
                     <div
                       style={{
@@ -767,7 +767,7 @@ export default function ReviewAndSubmit() {
                         marginTop: 6,
                       }}
                     >
-                      Select an address
+                      Select an Address
                     </button>
                   )}
 
@@ -840,7 +840,7 @@ export default function ReviewAndSubmit() {
                           width: "100%",
                         }}
                       >
-                        + Add new address
+                        + Add New Address
                       </button>
                     </div>
                   )}
@@ -943,7 +943,7 @@ export default function ReviewAndSubmit() {
             }}
           >
             <p style={{ fontSize: 14, fontWeight: 700, color: t.textPrimary, margin: "0 0 14px 0" }}>
-              {editingAddressId === "new" ? "Add address" : "Edit address"}
+              {editingAddressId === "new" ? "Add Address" : "Edit Address"}
             </p>
 
             {[
@@ -1037,7 +1037,7 @@ export default function ReviewAndSubmit() {
                     fontFamily: "'Roboto', sans-serif",
                   }}
                 >
-                  Make default
+                  Make Default
                 </button>
                 <button
                   onClick={() => {
@@ -1053,7 +1053,7 @@ export default function ReviewAndSubmit() {
                     fontFamily: "'Roboto', sans-serif",
                   }}
                 >
-                  Delete address
+                  Delete Address
                 </button>
               </div>
             )}

@@ -166,7 +166,7 @@ export default function ResetPassword() {
               style={{ width: 28, height: 3, background: "#C24747", borderRadius: 2, margin: "0 auto 20px auto" }}
             />
             <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
-              This link isn't valid
+              This Link Isn't Valid
             </h1>
             <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
               Password reset links expire after a while, and each one only works once. Request a new
@@ -186,7 +186,7 @@ export default function ResetPassword() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function ResetPassword() {
             <div style={{ marginBottom: 24 }}>
               <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                Set a new password
+                Set a New Password
               </h1>
               <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 Choose a new password for your account.
@@ -221,7 +221,7 @@ export default function ResetPassword() {
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>New password</label>
+                <label style={labelStyle}>New Password</label>
                 <input
                   type="password"
                   value={password}
@@ -236,7 +236,7 @@ export default function ResetPassword() {
                 )}
               </div>
               <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Confirm password</label>
+                <label style={labelStyle}>Confirm Password</label>
                 <input
                   type="password"
                   value={confirm}
@@ -267,7 +267,7 @@ export default function ResetPassword() {
                   opacity: isSubmitting || status === "done" ? 0.7 : 1,
                 }}
               >
-                {status === "done" ? "Password updated — redirecting…" : isSubmitting ? "Saving…" : "Save new password"}
+                {status === "done" ? "Password updated — redirecting…" : isSubmitting ? "Saving…" : "Save New Password"}
               </button>
             </form>
           </>

@@ -32,13 +32,13 @@ const MALE_FIELDS = [
   { id: "chest", label: "Chest" },
   { id: "waist", label: "Waist" },
   { id: "hips", label: "Hips" },
-  { id: "shoulder_width", label: "Shoulder width" },
-  { id: "sleeve_length", label: "Sleeve length" },
-  { id: "jacket_length", label: "Jacket length" },
+  { id: "shoulder_width", label: "Shoulder Width" },
+  { id: "sleeve_length", label: "Sleeve Length" },
+  { id: "jacket_length", label: "Jacket Length" },
   { id: "inseam", label: "Inseam" },
   { id: "outseam", label: "Outseam" },
   { id: "thigh", label: "Thigh" },
-  { id: "shoe_size", label: "Shoe size" },
+  { id: "shoe_size", label: "Shoe Size" },
 ];
 
 const FEMALE_FIELDS = [
@@ -46,12 +46,12 @@ const FEMALE_FIELDS = [
   { id: "underbust", label: "Underbust" },
   { id: "waist", label: "Waist" },
   { id: "hips", label: "Hips" },
-  { id: "shoulder_width", label: "Shoulder width" },
-  { id: "sleeve_length", label: "Sleeve length" },
-  { id: "dress_length", label: "Dress / garment length" },
+  { id: "shoulder_width", label: "Shoulder Width" },
+  { id: "sleeve_length", label: "Sleeve Length" },
+  { id: "dress_length", label: "Dress / Garment Length" },
   { id: "inseam", label: "Inseam" },
-  { id: "high_hip", label: "High hip" },
-  { id: "shoe_size", label: "Shoe size" },
+  { id: "high_hip", label: "High Hip" },
+  { id: "shoe_size", label: "Shoe Size" },
 ];
 
 function convert(value, fromUnit, toUnit) {
@@ -160,7 +160,7 @@ export default function MeasurementProfileSetup() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -170,7 +170,7 @@ export default function MeasurementProfileSetup() {
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
           />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            Your measurements
+            Your Measurements
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
             One quick profile so anything you're sent fits. You can update this anytime from
@@ -188,7 +188,7 @@ export default function MeasurementProfileSetup() {
             }}
           >
             <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>
-              Which measurement chart fits you best?
+              Which Measurement Chart Fits You Best?
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button
@@ -254,7 +254,7 @@ export default function MeasurementProfileSetup() {
                   padding: "6px 12px",
                 }}
               >
-                ← {gender === "male" ? "Men's" : "Women's"} chart
+                ← {gender === "male" ? "Men's" : "Women's"} Chart
               </button>
 
               <div style={{ display: "flex", gap: 6 }}>
@@ -347,7 +347,7 @@ export default function MeasurementProfileSetup() {
                 marginBottom: 10,
               }}
             >
-              Save and continue
+              Save and Continue
             </button>
 
             <button
@@ -366,7 +366,7 @@ export default function MeasurementProfileSetup() {
                 cursor: "pointer",
               }}
             >
-              Skip for now
+              Skip for Now
             </button>
 
             {saved && (

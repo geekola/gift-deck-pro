@@ -180,7 +180,7 @@ export default function CustomerSignUp() {
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -217,7 +217,7 @@ export default function CustomerSignUp() {
                 style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
               />
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                Create your account
+                Create Your Account
               </h1>
               <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 One account works across every brand you have access to.
@@ -255,7 +255,7 @@ export default function CustomerSignUp() {
 
             <form onSubmit={handleSignupSubmit}>
               <div style={{ marginBottom: 14 }}>
-                <label style={labelStyle}>Full name</label>
+                <label style={labelStyle}>Full Name</label>
                 <input
                   type="text"
                   value={signupForm.name}
@@ -351,7 +351,7 @@ export default function CustomerSignUp() {
                   opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {isSubmitting ? "Creating account…" : "Create account"}
+                {isSubmitting ? "Creating account…" : "Create Account"}
               </button>
             </form>
 
@@ -361,7 +361,7 @@ export default function CustomerSignUp() {
                 onClick={() => router.push("/login")}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
-                Sign in
+                Sign In
               </span>
             </p>
           </>
@@ -387,7 +387,7 @@ export default function CustomerSignUp() {
             </div>
 
             <h1 style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-              Check your email
+              Check Your Email
             </h1>
 
             <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 22px 0", lineHeight: 1.5 }}>
@@ -409,7 +409,7 @@ export default function CustomerSignUp() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to sign in
+              Back to Sign In
             </button>
           </div>
         )}

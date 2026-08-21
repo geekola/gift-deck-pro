@@ -316,7 +316,7 @@ export default function BrandCompanySettings() {
               letterSpacing: "0.03em",
             }}
           >
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -333,7 +333,7 @@ export default function BrandCompanySettings() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -359,7 +359,7 @@ export default function BrandCompanySettings() {
             <h1
               style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}
             >
-              Company settings
+              Company Settings
             </h1>
             <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
               Updates here apply immediately across the portal.
@@ -394,11 +394,11 @@ export default function BrandCompanySettings() {
               marginBottom: 16,
             }}
           >
-            <p style={sectionTitleStyle}>Brand details</p>
+            <p style={sectionTitleStyle}>Brand Details</p>
             <p style={sectionSubStyle}>Internal account info — not all of this is shown to customers.</p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Brand name</label>
+              <label style={labelStyle}>Brand Name</label>
               <input
                 type="text"
                 value={form.brandName}
@@ -458,7 +458,7 @@ export default function BrandCompanySettings() {
 
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>First name</label>
+                <label style={labelStyle}>First Name</label>
                 <input
                   type="text"
                   value={form.contactFirstName}
@@ -471,7 +471,7 @@ export default function BrandCompanySettings() {
                   errorText(errors.contactFirstName)}
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Last name</label>
+                <label style={labelStyle}>Last Name</label>
                 <input
                   type="text"
                   value={form.contactLastName}
@@ -487,7 +487,7 @@ export default function BrandCompanySettings() {
 
             <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Admin login email</label>
+                <label style={labelStyle}>Admin Login Email</label>
                 <input
                   type="email"
                   value={form.email}
@@ -501,7 +501,7 @@ export default function BrandCompanySettings() {
                 {touched.email && errors.email && errorText(errors.email)}
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Phone number</label>
+                <label style={labelStyle}>Phone Number</label>
                 <input
                   type="tel"
                   value={form.phoneNumber}
@@ -526,7 +526,7 @@ export default function BrandCompanySettings() {
             </div>
 
             <div>
-              <label style={labelStyle}>Fulfilment email</label>
+              <label style={labelStyle}>Fulfilment Email</label>
               <input
                 type="email"
                 value={form.fulfilmentEmail}
@@ -552,7 +552,7 @@ export default function BrandCompanySettings() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <p style={{ ...sectionTitleStyle, margin: 0 }}>Return address</p>
+              <p style={{ ...sectionTitleStyle, margin: 0 }}>Return Address</p>
               <span
                 style={{
                   fontSize: 10.5,
@@ -572,7 +572,7 @@ export default function BrandCompanySettings() {
             </p>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Street address</label>
+              <label style={labelStyle}>Street Address</label>
               <input
                 type="text"
                 value={form.returnAddress.line1}
@@ -585,7 +585,7 @@ export default function BrandCompanySettings() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Apartment, suite, etc. (optional)</label>
+              <label style={labelStyle}>Apartment, Suite, etc. (optional)</label>
               <input
                 type="text"
                 value={form.returnAddress.line2}
@@ -608,7 +608,7 @@ export default function BrandCompanySettings() {
                 {touched.addr_city && errors.returnAddress?.city && errorText(errors.returnAddress.city)}
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>State / province</label>
+                <label style={labelStyle}>State / Province</label>
                 <input
                   type="text"
                   value={form.returnAddress.state}
@@ -619,7 +619,7 @@ export default function BrandCompanySettings() {
                 {touched.addr_state && errors.returnAddress?.state && errorText(errors.returnAddress.state)}
               </div>
               <div style={{ flex: 1 }}>
-                <label style={labelStyle}>ZIP / postal</label>
+                <label style={labelStyle}>ZIP / Postal</label>
                 <input
                   type="text"
                   value={form.returnAddress.zip}
@@ -667,7 +667,7 @@ export default function BrandCompanySettings() {
                 opacity: isSaving ? 0.7 : 1,
               }}
             >
-              {isSaving ? "Saving…" : "Save changes"}
+              {isSaving ? "Saving…" : "Save Changes"}
             </button>
             {/* Right next to the button that was just clicked, rather than
                 up in the header where it's easy to miss if you were

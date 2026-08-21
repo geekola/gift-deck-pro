@@ -30,19 +30,19 @@ const tokens = {
 const CATEGORIES = ["Casual", "Business", "Formal", "Custom"];
 
 const FIELD_ROWS = [
-  [{ key: "brandName", label: "Brand name", type: "text", placeholder: "e.g. Atelier Noir" }],
-  [{ key: "email", label: "Admin login email", type: "email", placeholder: "admin@yourbrand.com" }],
+  [{ key: "brandName", label: "Brand Name", type: "text", placeholder: "e.g. Atelier Noir" }],
+  [{ key: "email", label: "Admin Login Email", type: "email", placeholder: "admin@yourbrand.com" }],
   [{ key: "password", label: "Password", type: "password", placeholder: "At least 8 characters" }],
   [
-    { key: "contactFirstName", label: "Primary contact first name", type: "text", placeholder: "First name" },
-    { key: "contactLastName", label: "Primary contact last name", type: "text", placeholder: "Last name" },
+    { key: "contactFirstName", label: "Primary Contact First Name", type: "text", placeholder: "First name" },
+    { key: "contactLastName", label: "Primary Contact Last Name", type: "text", placeholder: "Last name" },
   ],
-  [{ key: "phoneNumber", label: "Phone number", type: "tel", placeholder: "+1 (555) 555-0100" }],
-  [{ key: "website", label: "Brand website", type: "text", placeholder: "https://yourbrand.com" }],
+  [{ key: "phoneNumber", label: "Phone Number", type: "tel", placeholder: "+1 (555) 555-0100" }],
+  [{ key: "website", label: "Brand Website", type: "text", placeholder: "https://yourbrand.com" }],
   [
     {
       key: "fulfilmentEmail",
-      label: "Fulfilment email",
+      label: "Fulfilment Email",
       type: "email",
       placeholder: "orders@yourbrand.com",
       helper: "Where order invoices are sent until an ERP connection is configured.",
@@ -246,7 +246,7 @@ export default function BrandRegister() {
             Gift Deck Pro
           </span>
           <span style={{ fontSize: 11, fontWeight: 500, color: t.textSecondary, letterSpacing: "0.03em" }}>
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -264,7 +264,7 @@ export default function BrandRegister() {
           }}
           title="In the real app this lives in Settings only — exposed here for preview convenience"
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -283,7 +283,7 @@ export default function BrandRegister() {
             <div style={{ marginBottom: 24 }}>
               <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
               <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                Register your brand
+                Register Your Brand
               </h1>
               <p style={{ fontSize: 13, fontWeight: 400, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
                 A platform admin reviews every application before your portal access is activated.
@@ -382,7 +382,7 @@ export default function BrandRegister() {
                   opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {isSubmitting ? "Submitting…" : "Submit application"}
+                {isSubmitting ? "Submitting…" : "Submit Application"}
               </button>
             </form>
 
@@ -392,7 +392,7 @@ export default function BrandRegister() {
                 onClick={() => router.push("/login")}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
-                Log in
+                Log In
               </span>
             </p>
           </>
@@ -417,7 +417,7 @@ export default function BrandRegister() {
               ✉
             </div>
             <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
-              Check your email
+              Check Your Email
             </h1>
             <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
               We sent a confirmation link to <strong>{form.email}</strong>. Click it to finish
@@ -443,7 +443,7 @@ export default function BrandRegister() {
                 fontFamily: "'Roboto', sans-serif",
               }}
             >
-              Back to start
+              Back to Start
             </button>
           </div>
         )}

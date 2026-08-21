@@ -86,7 +86,7 @@ export default function SignUpChooser() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -103,7 +103,7 @@ export default function SignUpChooser() {
         <div style={{ marginBottom: 24 }}>
           <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            Get started
+            Get Started
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
             Are you shopping curated gifts, or registering a brand?
@@ -113,7 +113,7 @@ export default function SignUpChooser() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
           <button onClick={() => router.push("/customer/sign-up")} style={cardStyle}>
             <div style={{ fontSize: 15, fontWeight: 600, color: t.textPrimary, marginBottom: 4 }}>
-              I'm a customer
+              I'm a Customer
             </div>
             <div style={{ fontSize: 12.5, color: t.textSecondary, lineHeight: 1.5 }}>
               Browse curated pieces from brands you have access to.
@@ -122,7 +122,7 @@ export default function SignUpChooser() {
 
           <button onClick={() => router.push("/brand/register")} style={cardStyle}>
             <div style={{ fontSize: 15, fontWeight: 600, color: t.textPrimary, marginBottom: 4 }}>
-              I'm a brand
+              I'm a Brand
             </div>
             <div style={{ fontSize: 12.5, color: t.textSecondary, lineHeight: 1.5 }}>
               Register your brand for review. A platform admin approves every
@@ -137,7 +137,7 @@ export default function SignUpChooser() {
             onClick={() => router.push("/login")}
             style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
           >
-            Sign in
+            Sign In
           </span>
         </p>
       </div>

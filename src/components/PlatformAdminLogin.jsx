@@ -116,9 +116,9 @@ export default function PlatformAdminLogin() {
         <div style={{ marginBottom: 24 }}>
           <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            {mode === "login" && "Platform admin"}
-            {mode === "forgot" && "Reset your password"}
-            {mode === "forgot-sent" && "Check your email"}
+            {mode === "login" && "Platform Admin"}
+            {mode === "forgot" && "Reset Your Password"}
+            {mode === "forgot-sent" && "Check Your Email"}
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
             {mode === "login" && "Gift Deck Pro"}
@@ -223,7 +223,7 @@ export default function PlatformAdminLogin() {
               }}
               style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
             >
-              Forgot password?
+              Forgot Password?
             </span>
           </p>
           <button
@@ -243,7 +243,7 @@ export default function PlatformAdminLogin() {
               opacity: isSubmitting ? 0.7 : 1,
             }}
           >
-            {isSubmitting ? "Signing in…" : "Sign in"}
+            {isSubmitting ? "Signing in…" : "Sign In"}
           </button>
         </form>
         )}
@@ -300,7 +300,7 @@ export default function PlatformAdminLogin() {
                   opacity: isSubmitting ? 0.7 : 1,
                 }}
               >
-                {isSubmitting ? "Sending…" : "Send reset link"}
+                {isSubmitting ? "Sending…" : "Send Reset Link"}
               </button>
             </form>
 
@@ -312,7 +312,7 @@ export default function PlatformAdminLogin() {
                 }}
                 style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
               >
-                Back to sign in
+                Back to Sign In
               </span>
             </p>
           </>
@@ -337,7 +337,7 @@ export default function PlatformAdminLogin() {
               width: "100%",
             }}
           >
-            Back to sign in
+            Back to Sign In
           </button>
         )}
       </div>

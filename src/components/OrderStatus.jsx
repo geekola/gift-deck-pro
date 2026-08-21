@@ -67,7 +67,7 @@ function mapRequisition(row) {
 const STATE_ORDER = ["submitted", "invoiced", "confirmed", "dispatched"];
 const STATE_LABELS = {
   submitted: "Submitted",
-  invoiced: "Sent to brand",
+  invoiced: "Sent to Brand",
   confirmed: "Confirmed",
   dispatched: "Dispatched",
 };
@@ -213,7 +213,7 @@ export default function OrderStatus() {
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
           />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            In progress
+            In Progress
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
             Everything you've submitted, tracked from request to delivery.
@@ -331,7 +331,7 @@ export default function OrderStatus() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {isDeclined ? "No longer available" : STATE_LABELS[req.state]}
+                      {isDeclined ? "No Longer Available" : STATE_LABELS[req.state]}
                     </span>
                   </div>
 
@@ -365,7 +365,7 @@ export default function OrderStatus() {
                     ) : (
                       <>
                         <div style={{ marginBottom: 10 }}>
-                          <span style={labelStyle}>Shipping to</span>
+                          <span style={labelStyle}>Shipping To</span>
                           <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "3px 0 0 0" }}>
                             {isDispatched && req.fullAddress
                               ? req.fullAddress
@@ -395,7 +395,7 @@ export default function OrderStatus() {
                           .map((i, idx) => (
                             <div key={idx} style={{ marginBottom: 10 }}>
                               <span style={labelStyle}>
-                                Delivery window {req.items.length > 1 ? `— ${i.name}` : ""}
+                                Delivery Window {req.items.length > 1 ? `— ${i.name}` : ""}
                               </span>
                               {i.itemType === "purchase" || req.state === "confirmed" || isDispatched ? (
                                 <p style={{ fontSize: 12.5, color: t.textPrimary, margin: "3px 0 0 0" }}>

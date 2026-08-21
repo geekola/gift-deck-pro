@@ -317,7 +317,7 @@ export default function CustomerAccessManager() {
 
   const statusBadge = (status) => {
     const map = {
-      unactioned: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Awaiting decision" },
+      unactioned: { bg: "rgba(185,129,40,0.14)", color: tokens.gold, label: "Awaiting Decision" },
       approved: { bg: "rgba(99,153,34,0.16)", color: "#8FBF5A", label: "Approved" },
       denied: { bg: "rgba(194,71,71,0.14)", color: "#E27A7A", label: "Denied" },
     };
@@ -373,7 +373,7 @@ export default function CustomerAccessManager() {
               letterSpacing: "0.03em",
             }}
           >
-            BRAND PORTAL
+            Brand Portal
           </span>
         </div>
         <button
@@ -390,7 +390,7 @@ export default function CustomerAccessManager() {
             fontFamily: "'Roboto', sans-serif",
           }}
         >
-          {theme === "dark" ? "Preview: light" : "Preview: dark"}
+          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
         </button>
       </div>
 
@@ -408,7 +408,7 @@ export default function CustomerAccessManager() {
           <h1
             style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}
           >
-            Customer access
+            Customer Access
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
             {unactionedCount} {unactionedCount === 1 ? "customer" : "customers"} awaiting your decision
@@ -442,7 +442,7 @@ export default function CustomerAccessManager() {
           }}
         >
           <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 4px 0" }}>
-            Access policy
+            Access Policy
           </p>
           <p style={{ fontSize: 12, color: t.textSecondary, margin: "0 0 12px 0", maxWidth: 560 }}>
             Controls who can see your catalogue. Selective and Invite-only enforce identically —
@@ -517,7 +517,7 @@ export default function CustomerAccessManager() {
           <div style={{ display: "flex", gap: 8 }}>
             {[
               { key: "all", label: "All" },
-              { key: "unactioned", label: "Awaiting decision" },
+              { key: "unactioned", label: "Awaiting Decision" },
               { key: "approved", label: "Approved" },
               { key: "denied", label: "Denied" },
             ].map((f) => {
@@ -557,7 +557,7 @@ export default function CustomerAccessManager() {
               padding: "7px 10px",
             }}
           >
-            <option value="all">All industries</option>
+            <option value="all">All Industries</option>
             {INDUSTRIES.map((ind) => (
               <option key={ind} value={ind}>
                 {ind}
@@ -742,7 +742,7 @@ export default function CustomerAccessManager() {
                         filtered, read-only view, not the customer's full
                         contact list. */}
                     <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 4px 0" }}>
-                      Approved contacts
+                      Approved Contacts
                     </p>
                     <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "0 0 12px 0", lineHeight: 1.5 }}>
                       Shared by the customer for shipment coordination only — not all of their
@@ -817,7 +817,7 @@ export default function CustomerAccessManager() {
                       }}
                     >
                       <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: 0 }}>
-                        Gifting allowance
+                        Gifting Allowance
                       </p>
                       {!allowanceDraft && (
                         <button
@@ -834,7 +834,7 @@ export default function CustomerAccessManager() {
                             fontFamily: "'Roboto', sans-serif",
                           }}
                         >
-                          {selected.allowance ? "Edit" : "Set allowance"}
+                          {selected.allowance ? "Edit" : "Set Allowance"}
                         </button>
                       )}
                     </div>
@@ -937,7 +937,7 @@ export default function CustomerAccessManager() {
                           </div>
                         </div>
                         <div style={{ marginBottom: 12 }}>
-                          <label style={labelStyle}>Period type</label>
+                          <label style={labelStyle}>Period Type</label>
                           <select
                             value={allowanceDraft.periodType}
                             onChange={(e) =>
@@ -973,7 +973,7 @@ export default function CustomerAccessManager() {
                               fontFamily: "'Roboto', sans-serif",
                             }}
                           >
-                            Save allowance
+                            Save Allowance
                           </button>
                           <button
                             onClick={() => {
