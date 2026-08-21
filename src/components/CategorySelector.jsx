@@ -116,12 +116,34 @@ export default function CategorySelector() {
           <div
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
           />
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            What are you in the mood for?
-          </h1>
-          <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
-            Pick a category to enter its deck. You can switch anytime.
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div>
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
+                What are you in the mood for?
+              </h1>
+              <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
+                Pick a category to enter its deck. You can switch anytime.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push("/customer/browse")}
+              style={{
+                fontSize: 11.5,
+                fontWeight: 500,
+                color: tokens.gold,
+                background: "transparent",
+                border: `1px solid ${tokens.gold}`,
+                borderRadius: 7,
+                padding: "7px 12px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              + Browse brands
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
