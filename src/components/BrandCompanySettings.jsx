@@ -365,21 +365,6 @@ export default function BrandCompanySettings() {
               Updates here apply immediately across the portal.
             </p>
           </div>
-          {saved && (
-            <span
-              style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: "#8FBF5A",
-                background: "rgba(99,153,34,0.14)",
-                padding: "5px 12px",
-                borderRadius: 7,
-                whiteSpace: "nowrap",
-              }}
-            >
-              Saved
-            </span>
-          )}
         </div>
 
         {saveError && (
@@ -664,25 +649,46 @@ export default function BrandCompanySettings() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSaving}
-            style={{
-              width: "100%",
-              padding: "13px 0",
-              fontSize: 14.5,
-              fontWeight: 500,
-              fontFamily: "'Roboto', sans-serif",
-              color: "#0F0F0F",
-              background: tokens.gold,
-              border: "none",
-              borderRadius: 8,
-              cursor: "pointer",
-              opacity: isSaving ? 0.7 : 1,
-            }}
-          >
-            {isSaving ? "Saving…" : "Save changes"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              type="submit"
+              disabled={isSaving}
+              style={{
+                flex: 1,
+                padding: "13px 0",
+                fontSize: 14.5,
+                fontWeight: 500,
+                fontFamily: "'Roboto', sans-serif",
+                color: "#0F0F0F",
+                background: tokens.gold,
+                border: "none",
+                borderRadius: 8,
+                cursor: "pointer",
+                opacity: isSaving ? 0.7 : 1,
+              }}
+            >
+              {isSaving ? "Saving…" : "Save changes"}
+            </button>
+            {/* Right next to the button that was just clicked, rather than
+                up in the header where it's easy to miss if you were
+                editing a section further down the form (e.g. the return
+                address, which sits at the very bottom). */}
+            {saved && (
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#8FBF5A",
+                  background: "rgba(99,153,34,0.14)",
+                  padding: "10px 16px",
+                  borderRadius: 8,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ✓ Saved
+              </span>
+            )}
+          </div>
         </form>
       </div>
     </div>

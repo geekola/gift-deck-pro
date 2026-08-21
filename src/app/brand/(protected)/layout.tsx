@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import BrandNav from "@/components/BrandNav";
 
 // Same guard pattern as platform-admin and customer. This is also the
 // real enforcement point for "a brand can't operate the portal until
@@ -60,27 +61,30 @@ export default async function BrandProtectedLayout({
     !brand?.return_country;
 
   return (
-    <>
-      {missingReturnAddress && (
-        <div
-          style={{
-            fontFamily: "'Roboto', sans-serif",
-            background: "rgba(185,129,40,0.14)",
-            borderBottom: "1px solid rgba(185,129,40,0.35)",
-            color: "#EAEAEA",
-            fontSize: 13,
-            padding: "10px 20px",
-            textAlign: "center",
-          }}
-        >
-          Your return address isn't set yet.{" "}
-          <a href="/brand/settings" style={{ color: "#B98128", fontWeight: 500, textDecoration: "underline" }}>
-            Add it in Company settings
-          </a>{" "}
-          — you won't be able to mark an order as invoiced until it's complete.
-        </div>
-      )}
-      {children}
-    </>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0F0F0F" }}>
+      <BrandNav />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {missingReturnAddress && (
+          <div
+            style={{
+              fontFamily: "'Roboto', sans-serif",
+              background: "rgba(185,129,40,0.14)",
+              borderBottom: "1px solid rgba(185,129,40,0.35)",
+              color: "#EAEAEA",
+              fontSize: 13,
+              padding: "10px 20px",
+              textAlign: "center",
+            }}
+          >
+            Your return address isn't set yet.{" "}
+            <a href="/brand/settings" style={{ color: "#B98128", fontWeight: 500, textDecoration: "underline" }}>
+              Add it in Company settings
+            </a>{" "}
+            — you won't be able to mark an order as invoiced until it's complete.
+          </div>
+        )}
+        {children}
+      </div>
+    </div>
   );
 }
