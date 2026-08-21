@@ -27,8 +27,10 @@ export default function PlatformAdminLogin() {
   const supabase = createClient();
   const t = tokens.dark;
 
+  const [mode, setMode] = useState("login"); // login | forgot | forgot-sent
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -65,6 +67,29 @@ export default function PlatformAdminLogin() {
     router.refresh();
   };
 
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+    // Same intentional non-disclosure as the customer/brand flows -
+    // Supabase doesn't reveal whether the address has an account.
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    });
+    setIsSubmitting(false);
+
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+    setMode("forgot-sent");
+  };
+
   return (
     <div
       style={{
@@ -91,10 +116,19 @@ export default function PlatformAdminLogin() {
         <div style={{ marginBottom: 24 }}>
           <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
-            Platform admin
+            {mode === "login" && "Platform admin"}
+            {mode === "forgot" && "Reset your password"}
+            {mode === "forgot-sent" && "Check your email"}
           </h1>
           <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
-            Gift Deck Pro
+            {mode === "login" && "Gift Deck Pro"}
+            {mode === "forgot" && "Enter your email and we'll send you a link to set a new password."}
+            {mode === "forgot-sent" && (
+              <>
+                If an account exists for <strong>{forgotEmail}</strong>, we've sent a link to reset
+                your password.
+              </>
+            )}
           </p>
         </div>
 
@@ -114,6 +148,7 @@ export default function PlatformAdminLogin() {
           </div>
         )}
 
+        {mode === "login" && (
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
             <label
@@ -179,6 +214,18 @@ export default function PlatformAdminLogin() {
               }}
             />
           </div>
+          <p style={{ textAlign: "right", fontSize: 12.5, margin: "0 0 20px 0" }}>
+            <span
+              onClick={() => {
+                setForgotEmail(email);
+                setMode("forgot");
+                setError("");
+              }}
+              style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
+            >
+              Forgot password?
+            </span>
+          </p>
           <button
             type="submit"
             disabled={isSubmitting}
@@ -199,6 +246,100 @@ export default function PlatformAdminLogin() {
             {isSubmitting ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        )}
+
+        {mode === "forgot" && (
+          <>
+            <form onSubmit={handleForgotSubmit}>
+              <div style={{ marginBottom: 20 }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    color: t.textSecondary,
+                    marginBottom: 6,
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="admin@giftdeckpro.com"
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "11px 14px",
+                    fontSize: 14,
+                    fontFamily: "'Roboto', sans-serif",
+                    color: t.textPrimary,
+                    background: t.inputBg,
+                    border: `1px solid ${t.border}`,
+                    borderRadius: 8,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  fontFamily: "'Roboto', sans-serif",
+                  color: "#0F0F0F",
+                  background: tokens.gold,
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
+                }}
+              >
+                {isSubmitting ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+
+            <p style={{ textAlign: "center", fontSize: 13, color: t.textSecondary, marginTop: 20 }}>
+              <span
+                onClick={() => {
+                  setMode("login");
+                  setError("");
+                }}
+                style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
+              >
+                Back to sign in
+              </span>
+            </p>
+          </>
+        )}
+
+        {mode === "forgot-sent" && (
+          <button
+            onClick={() => {
+              setMode("login");
+              setForgotEmail("");
+            }}
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              color: t.textSecondary,
+              background: "transparent",
+              border: `1px solid ${t.border}`,
+              borderRadius: 8,
+              padding: "9px 16px",
+              cursor: "pointer",
+              fontFamily: "'Roboto', sans-serif",
+              width: "100%",
+            }}
+          >
+            Back to sign in
+          </button>
+        )}
       </div>
     </div>
   );

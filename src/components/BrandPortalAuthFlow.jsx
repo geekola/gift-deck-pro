@@ -112,6 +112,7 @@ export default function BrandPortalAuthFlow() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const t = tokens[theme];
 
@@ -292,6 +293,30 @@ export default function BrandPortalAuthFlow() {
     } else {
       setStep("pending");
     }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      setLoginError("Enter a valid email address.");
+      return;
+    }
+
+    setLoginError("");
+    setIsSubmitting(true);
+    // Same intentional non-disclosure as the customer flow - Supabase
+    // doesn't reveal whether the address has an account, and neither
+    // does this UI.
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      setLoginError(error.message);
+      return;
+    }
+    setStep("forgot-sent");
   };
 
   const inputStyle = (key) => ({
@@ -712,6 +737,18 @@ export default function BrandPortalAuthFlow() {
                   }}
                 />
               </div>
+              <p style={{ textAlign: "right", fontSize: 12.5, margin: "0 0 8px 0" }}>
+                <span
+                  onClick={() => {
+                    setForgotEmail(loginEmail);
+                    setStep("forgot");
+                    setLoginError("");
+                  }}
+                  style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
+                >
+                  Forgot password?
+                </span>
+              </p>
               {loginError && (
                 <p style={{ fontSize: 12, color: "#E27A7A", margin: "4px 0 16px 0" }}>{loginError}</p>
               )}
@@ -748,6 +785,125 @@ export default function BrandPortalAuthFlow() {
               </span>
             </p>
           </>
+        )}
+
+        {step === "forgot" && (
+          <>
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
+              <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 6px 0" }}>
+                Reset your password
+              </h1>
+              <p style={{ fontSize: 13, color: t.textSecondary, margin: 0, lineHeight: 1.5 }}>
+                Enter your login email and we'll send you a link to set a new password.
+              </p>
+            </div>
+
+            <form onSubmit={handleForgotSubmit}>
+              <div style={{ marginBottom: 20 }}>
+                <label style={labelStyle}>Email</label>
+                <input
+                  type="email"
+                  placeholder="you@yourbrand.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    padding: "11px 14px",
+                    fontSize: 14,
+                    fontFamily: "'Roboto', sans-serif",
+                    color: t.textPrimary,
+                    background: t.inputBg,
+                    border: `1px solid ${t.border}`,
+                    borderRadius: 8,
+                    outline: "none",
+                  }}
+                />
+              </div>
+              {loginError && (
+                <p style={{ fontSize: 12, color: "#E27A7A", margin: "4px 0 16px 0" }}>{loginError}</p>
+              )}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                style={{
+                  width: "100%",
+                  padding: "12px 0",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  fontFamily: "'Roboto', sans-serif",
+                  color: "#0F0F0F",
+                  background: tokens.gold,
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: isSubmitting ? "default" : "pointer",
+                  opacity: isSubmitting ? 0.7 : 1,
+                }}
+              >
+                {isSubmitting ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+
+            <p style={{ textAlign: "center", fontSize: 13, color: t.textSecondary, marginTop: 20 }}>
+              <span
+                onClick={() => {
+                  setStep("login");
+                  setLoginError("");
+                }}
+                style={{ color: tokens.gold, cursor: "pointer", fontWeight: 500 }}
+              >
+                Back to log in
+              </span>
+            </p>
+          </>
+        )}
+
+        {step === "forgot-sent" && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: "rgba(185,129,40,0.14)",
+                color: tokens.gold,
+                fontSize: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 18px auto",
+              }}
+            >
+              ✉
+            </div>
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 10px 0" }}>
+              Check your email
+            </h1>
+            <p style={{ fontSize: 13.5, color: t.textSecondary, lineHeight: 1.6, margin: "0 0 24px 0" }}>
+              If an account exists for <strong>{forgotEmail}</strong>, we've sent a link to reset
+              your password.
+            </p>
+            <button
+              onClick={() => {
+                setStep("login");
+                setForgotEmail("");
+              }}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: t.textSecondary,
+                background: "transparent",
+                border: `1px solid ${t.border}`,
+                borderRadius: 8,
+                padding: "9px 16px",
+                cursor: "pointer",
+                fontFamily: "'Roboto', sans-serif",
+              }}
+            >
+              Back to log in
+            </button>
+          </div>
         )}
       </div>
     </div>
