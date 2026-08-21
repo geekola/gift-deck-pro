@@ -27,52 +27,6 @@ const tokens = {
   gold: "#B98128",
 };
 
-// ── Shared mock data pool — still used by the VIP Contracts section (MVP
-// step 3, not wired yet). Review Queue and Restriction Manager below no
-// longer touch this; both are real Supabase data now (MVP steps 1-2). ──
-const MOCK_CUSTOMERS = [
-  { id: "cust_001", name: "Alex M.", tier: "general" },
-  { id: "cust_002", name: "Priya K.", tier: "VIP" },
-  { id: "cust_003", name: "Jonah R.", tier: "VIP" },
-  { id: "cust_004", name: "Sofia L.", tier: "general" },
-  { id: "cust_005", name: "Devon T.", tier: "general" },
-];
-
-const MOCK_BRANDS = [
-  { id: "brand_001", name: "Atelier Noir" },
-  { id: "brand_002", name: "Halden & Vance" },
-  { id: "brand_003", name: "Roux Studio" },
-];
-
-const SEED_CONTRACTS = [
-  {
-    id: "contract_001",
-    customerId: "cust_002",
-    brandId: "brand_001",
-    contractStatus: "executed",
-    contractTerms: "12-month formalwear gifting and appearance agreement, executed 5/14/2026. Full terms held by legal, outside PSF.",
-    unlocked: true,
-    unlockedAt: "2026-05-15T10:00:00Z",
-    unlockedBy: "platform_admin_preview",
-    notes: "Negotiated directly with Priya's agent. No financial terms are tracked in PSF.",
-    createdAt: "2026-05-10T09:00:00Z",
-    updatedAt: "2026-05-15T10:00:00Z",
-  },
-  {
-    id: "contract_002",
-    customerId: "cust_003",
-    brandId: "brand_002",
-    contractStatus: "pending",
-    contractTerms: "",
-    unlocked: true,
-    unlockedAt: "2026-06-20T14:30:00Z",
-    unlockedBy: "platform_admin_preview",
-    notes: "Brand relationship approved verbally pending signed paperwork — admin judgment call to unlock ahead of contract completion.",
-    createdAt: "2026-06-20T14:30:00Z",
-    updatedAt: "2026-06-20T14:30:00Z",
-  },
-];
-
 const CONTRACT_STATUSES = [
   { key: "none", label: "No contract on file" },
   { key: "pending", label: "Pending" },
@@ -736,19 +690,66 @@ function RestrictionManagerSection({ t, onGoToVip }) {
 // SECTION: VIP Talent Contracts
 // ═══════════════════════════════════════════════════════════════════════
 function VipContractsSection({ t }) {
-  const [contracts, setContracts] = useState(SEED_CONTRACTS);
-  const [selectedVipId, setSelectedVipId] = useState("cust_002");
+  const supabase = createClient();
+
+  const [vipCustomers, setVipCustomers] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
+  const [contracts, setContracts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [selectedVipId, setSelectedVipId] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [draft, setDraft] = useState({ brandId: "", contractStatus: "none", contractTerms: "", notes: "", unlocked: false });
   const [draftErrors, setDraftErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const vipCustomers = MOCK_CUSTOMERS.filter((c) => c.tier === "VIP");
+  // Maps a Supabase brand_talent_contracts row (joined with brand name)
+  // onto the camelCase shape the render logic below already expects.
+  const mapContract = (row) => ({
+    id: row.id,
+    customerId: row.customer_id,
+    brandId: row.brand_id,
+    contractStatus: row.contract_status,
+    contractTerms: row.contract_terms,
+    notes: row.notes,
+    unlocked: row.unlocked,
+    unlockedAt: row.unlocked_at,
+    unlockedBy: row.unlocked_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  });
+
+  const loadAll = async () => {
+    const [vipsRes, brandsRes, contractsRes] = await Promise.all([
+      supabase.from("customers").select("id, name, tier").eq("tier", "VIP").order("name"),
+      supabase.from("brands").select("id, brand_name").order("brand_name"),
+      supabase.from("brand_talent_contracts").select("*").order("updated_at", { ascending: false }),
+    ]);
+
+    if (vipsRes.error || contractsRes.error) {
+      setLoadError((vipsRes.error || contractsRes.error).message);
+    } else {
+      setLoadError("");
+      setVipCustomers(vipsRes.data || []);
+      setAllBrands(brandsRes.data || []);
+      setContracts((contractsRes.data || []).map(mapContract));
+      setSelectedVipId((current) => current ?? vipsRes.data?.[0]?.id ?? null);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const selectedVip = vipCustomers.find((c) => c.id === selectedVipId);
   const vipContracts = contracts.filter((c) => c.customerId === selectedVipId);
   const contractedBrandIds = vipContracts.map((c) => c.brandId);
-  const availableBrands = MOCK_BRANDS.filter((b) => !contractedBrandIds.includes(b.id));
-  const brandName = (id) => MOCK_BRANDS.find((b) => b.id === id)?.name || "Unknown brand";
+  const availableBrands = allBrands.filter((b) => !contractedBrandIds.includes(b.id));
+  const brandName = (id) => allBrands.find((b) => b.id === id)?.brand_name || "Unknown brand";
 
   const statusBadge = (status) => {
     const map = {
@@ -769,33 +770,97 @@ function VipContractsSection({ t }) {
     setEditingId(contract.id); setShowNewForm(false); setDraftErrors({});
   };
 
-  const handleSaveNew = (e) => {
+  const handleSaveNew = async (e) => {
     e.preventDefault();
     const errs = {};
     if (!draft.brandId) errs.brandId = "Select a brand.";
     setDraftErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    setContracts((cs) => [...cs, {
-      id: `contract_${Date.now()}`, customerId: selectedVipId, brandId: draft.brandId, contractStatus: draft.contractStatus, contractTerms: draft.contractTerms.trim(),
-      unlocked: draft.unlocked, unlockedAt: draft.unlocked ? new Date().toISOString() : null, unlockedBy: draft.unlocked ? "platform_admin_preview" : null,
-      notes: draft.notes.trim(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    }]);
+
+    setIsSaving(true);
+    setActionError("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase.from("brand_talent_contracts").insert({
+      customer_id: selectedVipId,
+      brand_id: draft.brandId,
+      contract_status: draft.contractStatus,
+      contract_terms: draft.contractTerms.trim(),
+      notes: draft.notes.trim() || null,
+      unlocked: draft.unlocked,
+      unlocked_at: draft.unlocked ? new Date().toISOString() : null,
+      unlocked_by: draft.unlocked ? user?.id ?? null : null,
+    });
+
+    if (error) {
+      setActionError(error.message);
+      setIsSaving(false);
+      return;
+    }
+
     resetDraft(); setShowNewForm(false);
+    setIsSaving(false);
+    await loadAll();
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    setContracts((cs) => cs.map((c) => c.id === editingId ? {
-      ...c, contractStatus: draft.contractStatus, contractTerms: draft.contractTerms.trim(), notes: draft.notes.trim(), unlocked: draft.unlocked,
-      unlockedAt: draft.unlocked ? c.unlockedAt || new Date().toISOString() : null, unlockedBy: draft.unlocked ? c.unlockedBy || "platform_admin_preview" : null, updatedAt: new Date().toISOString(),
-    } : c));
+    setIsSaving(true);
+    setActionError("");
+
+    const editing = contracts.find((c) => c.id === editingId);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("brand_talent_contracts")
+      .update({
+        contract_status: draft.contractStatus,
+        contract_terms: draft.contractTerms.trim(),
+        notes: draft.notes.trim() || null,
+        unlocked: draft.unlocked,
+        unlocked_at: draft.unlocked ? editing?.unlockedAt || new Date().toISOString() : null,
+        unlocked_by: draft.unlocked ? editing?.unlockedBy || user?.id || null : null,
+      })
+      .eq("id", editingId);
+
+    if (error) {
+      setActionError(error.message);
+      setIsSaving(false);
+      return;
+    }
+
     setEditingId(null); resetDraft();
+    setIsSaving(false);
+    await loadAll();
   };
 
-  const toggleUnlock = (contractId) => {
-    setContracts((cs) => cs.map((c) => c.id === contractId ? {
-      ...c, unlocked: !c.unlocked, unlockedAt: !c.unlocked ? new Date().toISOString() : c.unlockedAt, unlockedBy: !c.unlocked ? "platform_admin_preview" : c.unlockedBy, updatedAt: new Date().toISOString(),
-    } : c));
+  const toggleUnlock = async (contract) => {
+    setActionError("");
+    const nextUnlocked = !contract.unlocked;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("brand_talent_contracts")
+      .update({
+        unlocked: nextUnlocked,
+        unlocked_at: nextUnlocked ? new Date().toISOString() : contract.unlockedAt,
+        unlocked_by: nextUnlocked ? user?.id ?? null : contract.unlockedBy,
+      })
+      .eq("id", contract.id);
+
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    await loadAll();
   };
 
   const labelStyle = { display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 5 };
@@ -809,7 +874,7 @@ function VipContractsSection({ t }) {
           <label style={labelStyle}>Brand</label>
           <select value={draft.brandId} onChange={(e) => setDraft((d) => ({ ...d, brandId: e.target.value }))} style={inputStyle(draftErrors.brandId)}>
             <option value="">Select brand…</option>
-            {availableBrands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            {availableBrands.map((b) => <option key={b.id} value={b.id}>{b.brand_name}</option>)}
           </select>
           {draftErrors.brandId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.brandId}</p>}
           {availableBrands.length === 0 && <p style={{ fontSize: 11.5, color: t.textSecondary, margin: "5px 0 0 0" }}>Every brand already has a contract record for this VIP.</p>}
@@ -839,7 +904,7 @@ function VipContractsSection({ t }) {
         </button>
       </div>
       <div style={{ display: "flex", gap: 10 }}>
-        <button type="submit" style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>{isEdit ? "Save changes" : "Create record"}</button>
+        <button type="submit" disabled={isSaving} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : isEdit ? "Save changes" : "Create record"}</button>
         <button type="button" onClick={() => { setShowNewForm(false); setEditingId(null); resetDraft(); }} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 500, color: t.textSecondary, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Cancel</button>
       </div>
     </form>
@@ -853,6 +918,26 @@ function VipContractsSection({ t }) {
           Governs which brands can see and engage your VIP-tier roster. A VIP customer is invisible to a brand until explicitly unlocked here.
         </p>
       </div>
+
+      {(loadError || actionError) && (
+        <div style={{ background: "rgba(194,71,71,0.12)", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#E27A7A", marginBottom: 16 }}>
+          {loadError || actionError}
+        </div>
+      )}
+
+      {isLoading && (
+        <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "22px 18px", textAlign: "center", fontSize: 13, color: t.textSecondary }}>
+          Loading…
+        </div>
+      )}
+
+      {!isLoading && vipCustomers.length === 0 && (
+        <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "22px 18px", textAlign: "center", fontSize: 13, color: t.textSecondary }}>
+          No VIP-tier customers yet. A customer needs tier = 'VIP' before they can have a talent contract record.
+        </div>
+      )}
+
+      {!isLoading && vipCustomers.length > 0 && (
       <div style={{ display: "flex", gap: 16 }}>
         <div style={{ flex: "0 0 240px", background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, overflow: "hidden" }}>
           <div style={{ padding: "12px 16px", borderBottom: `1px solid ${t.border}`, fontSize: 12, fontWeight: 500, color: t.textSecondary }}>VIP roster ({vipCustomers.length})</div>
@@ -897,7 +982,7 @@ function VipContractsSection({ t }) {
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{ fontSize: 11, fontWeight: 500, color: c.unlocked ? "#8FBF5A" : t.textSecondary }}>{c.unlocked ? "Unlocked" : "Blocked"}</span>
-                        <button onClick={() => toggleUnlock(c.id)} style={{ width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer", background: c.unlocked ? tokens.gold : t.border, position: "relative" }}>
+                        <button onClick={() => toggleUnlock(c)} style={{ width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer", background: c.unlocked ? tokens.gold : t.border, position: "relative" }}>
                           <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: c.unlocked ? 21 : 3, transition: "left 0.15s ease" }} />
                         </button>
                       </div>
@@ -916,6 +1001,7 @@ function VipContractsSection({ t }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
