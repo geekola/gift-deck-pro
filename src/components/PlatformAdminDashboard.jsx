@@ -27,9 +27,9 @@ const tokens = {
   gold: "#B98128",
 };
 
-// ── Shared mock data pool — still used by the Restrictions / VIP sections
-// (steps 2-3 of the MVP process — not wired yet). Review Queue below no
-// longer touches this; it was ported to real Supabase data as MVP step 1. ──
+// ── Shared mock data pool — still used by the VIP Contracts section (MVP
+// step 3, not wired yet). Review Queue and Restriction Manager below no
+// longer touch this; both are real Supabase data now (MVP steps 1-2). ──
 const MOCK_CUSTOMERS = [
   { id: "cust_001", name: "Alex M.", tier: "general" },
   { id: "cust_002", name: "Priya K.", tier: "VIP" },
@@ -42,28 +42,6 @@ const MOCK_BRANDS = [
   { id: "brand_001", name: "Atelier Noir" },
   { id: "brand_002", name: "Halden & Vance" },
   { id: "brand_003", name: "Roux Studio" },
-];
-
-const SEED_RESTRICTIONS = [
-  {
-    id: "restr_001",
-    customerId: "cust_002",
-    brandId: "brand_001",
-    reason: "Sponsorship exclusivity conflict — customer is contracted to a competing formalwear brand through Q3.",
-    notes: "Flagged by legal team 6/10. Revisit after Q3 contract expires.",
-    expiresAt: "2026-09-30T23:59:59Z",
-    createdAt: "2026-06-10T11:00:00Z",
-    createdBy: "platform_admin_preview",
-    removedAt: null,
-    removedBy: null,
-    removalReason: null,
-    frozenAllowanceSnapshot: {
-      limit: 5000,
-      currency: "USD",
-      periodType: "calendar_quarter",
-      consumed: 4600,
-    },
-  },
 ];
 
 const SEED_CONTRACTS = [
@@ -111,7 +89,9 @@ function formatDate(iso) {
 
 function isExpired(restriction) {
   if (!restriction.expiresAt) return false;
-  return new Date(restriction.expiresAt) < new Date("2026-06-25");
+  // Was hardcoded to a fixed preview date ("2026-06-25") in the mock;
+  // real data needs an actual current-time comparison.
+  return new Date(restriction.expiresAt) < new Date();
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -417,7 +397,14 @@ function ReviewQueueSection({ t }) {
 // SECTION: Restriction Manager (with tab-out button to VIP Contracts)
 // ═══════════════════════════════════════════════════════════════════════
 function RestrictionManagerSection({ t, onGoToVip }) {
-  const [restrictions, setRestrictions] = useState(SEED_RESTRICTIONS);
+  const supabase = createClient();
+
+  const [restrictions, setRestrictions] = useState([]);
+  const [allCustomers, setAllCustomers] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [filter, setFilter] = useState("active");
   const [showNewForm, setShowNewForm] = useState(false);
   const [removingId, setRemovingId] = useState(null);
@@ -425,9 +412,56 @@ function RestrictionManagerSection({ t, onGoToVip }) {
   const [removalError, setRemovalError] = useState("");
   const [draft, setDraft] = useState({ customerId: "", brandId: "", reason: "", notes: "", isPermanent: true, expiresAt: "" });
   const [draftErrors, setDraftErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const customerName = (id) => MOCK_CUSTOMERS.find((c) => c.id === id)?.name || "Unknown customer";
-  const brandName = (id) => MOCK_BRANDS.find((b) => b.id === id)?.name || "Unknown brand";
+  // Maps a Supabase restrictions row (joined with customer/brand names)
+  // onto the camelCase shape the render logic below already expects.
+  // frozen_allowance_snapshot keeps the same limit/currency/periodType/
+  // consumed keys it's written with in handleCreate below.
+  const mapRestriction = (row) => ({
+    id: row.id,
+    customerId: row.customer_id,
+    brandId: row.brand_id,
+    customerName: row.customers?.name || "Unknown customer",
+    brandName: row.brands?.brand_name || "Unknown brand",
+    reason: row.reason,
+    notes: row.notes,
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+    createdBy: row.created_by,
+    removedAt: row.removed_at,
+    removedBy: row.removed_by,
+    removalReason: row.removal_reason,
+    frozenAllowanceSnapshot: row.frozen_allowance_snapshot,
+  });
+
+  const loadRestrictions = async () => {
+    const { data, error } = await supabase
+      .from("restrictions")
+      .select("*, customers(name), brands(brand_name)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      setLoadError("");
+      setRestrictions((data || []).map(mapRestriction));
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadRestrictions();
+    (async () => {
+      const [{ data: customers }, { data: brands }] = await Promise.all([
+        supabase.from("customers").select("id, name").order("name"),
+        supabase.from("brands").select("id, brand_name").order("brand_name"),
+      ]);
+      setAllCustomers(customers || []);
+      setAllBrands(brands || []);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const visibleRestrictions = restrictions.filter((r) => {
     const removed = !!r.removedAt;
@@ -455,26 +489,87 @@ function RestrictionManagerSection({ t, onGoToVip }) {
     return errs;
   };
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
     const errs = validateDraft();
     setDraftErrors(errs);
     if (Object.keys(errs).length > 0) return;
-    setRestrictions((rs) => [...rs, {
-      id: `restr_${Date.now()}`, customerId: draft.customerId, brandId: draft.brandId, reason: draft.reason.trim(), notes: draft.notes.trim(),
-      expiresAt: draft.isPermanent ? null : new Date(draft.expiresAt).toISOString(), createdAt: new Date().toISOString(), createdBy: "platform_admin_preview",
-      removedAt: null, removedBy: null, removalReason: null, frozenAllowanceSnapshot: null,
-    }]);
+
+    setIsSaving(true);
+    setActionError("");
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Per the schema comment on restrictions.frozen_allowance_snapshot: if
+    // the customer has an active, unconsumed allowance with this brand,
+    // it's frozen (not forfeited) - snapshotted here rather than deleting
+    // or altering the real gifting_allowances row, which is left as-is.
+    const { data: allowance } = await supabase
+      .from("gifting_allowances")
+      .select("limit_amount, currency, period_type, consumed")
+      .eq("customer_id", draft.customerId)
+      .eq("brand_id", draft.brandId)
+      .maybeSingle();
+
+    const frozenSnapshot = allowance
+      ? {
+          limit: allowance.limit_amount,
+          currency: allowance.currency,
+          periodType: allowance.period_type,
+          consumed: allowance.consumed,
+        }
+      : null;
+
+    const { error } = await supabase.from("restrictions").insert({
+      customer_id: draft.customerId,
+      brand_id: draft.brandId,
+      reason: draft.reason.trim(),
+      notes: draft.notes.trim() || null,
+      is_permanent: draft.isPermanent,
+      expires_at: draft.isPermanent ? null : new Date(draft.expiresAt).toISOString(),
+      created_by: user?.id ?? null,
+      frozen_allowance_snapshot: frozenSnapshot,
+    });
+
+    if (error) {
+      setActionError(error.message);
+      setIsSaving(false);
+      return;
+    }
+
     setDraft({ customerId: "", brandId: "", reason: "", notes: "", isPermanent: true, expiresAt: "" });
     setDraftErrors({});
     setShowNewForm(false);
+    setIsSaving(false);
+    await loadRestrictions();
   };
 
   const openRemoval = (id) => { setRemovingId(id); setRemovalReason(""); setRemovalError(""); };
-  const confirmRemoval = () => {
+  const confirmRemoval = async () => {
     if (!removalReason.trim()) { setRemovalError("A removal reason is required for the audit trail."); return; }
-    setRestrictions((rs) => rs.map((r) => r.id === removingId ? { ...r, removedAt: new Date().toISOString(), removedBy: "platform_admin_preview", removalReason: removalReason.trim() } : r));
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("restrictions")
+      .update({
+        removed_at: new Date().toISOString(),
+        removed_by: user?.id ?? null,
+        removal_reason: removalReason.trim(),
+      })
+      .eq("id", removingId);
+
+    if (error) {
+      setRemovalError(error.message);
+      return;
+    }
+
     setRemovingId(null); setRemovalReason(""); setRemovalError("");
+    await loadRestrictions();
   };
 
   const labelStyle = { display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 5 };
@@ -519,6 +614,12 @@ function RestrictionManagerSection({ t, onGoToVip }) {
         for that.
       </div>
 
+      {(loadError || actionError) && (
+        <div style={{ background: "rgba(194,71,71,0.12)", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#E27A7A", marginBottom: 16 }}>
+          {loadError || actionError}
+        </div>
+      )}
+
       {showNewForm && (
         <form onSubmit={handleCreate} style={{ background: t.surface, border: `1px solid ${tokens.gold}`, borderRadius: 12, padding: "20px 22px", marginBottom: 18 }}>
           <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 14px 0" }}>New restriction</p>
@@ -527,7 +628,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
               <label style={labelStyle}>Customer</label>
               <select value={draft.customerId} onChange={(e) => setDraft((d) => ({ ...d, customerId: e.target.value }))} style={inputStyle(draftErrors.customerId)}>
                 <option value="">Select customer…</option>
-                {MOCK_CUSTOMERS.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {allCustomers.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {draftErrors.customerId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.customerId}</p>}
             </div>
@@ -535,7 +636,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
               <label style={labelStyle}>Brand</label>
               <select value={draft.brandId} onChange={(e) => setDraft((d) => ({ ...d, brandId: e.target.value }))} style={inputStyle(draftErrors.brandId)}>
                 <option value="">Select brand…</option>
-                {MOCK_BRANDS.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                {allBrands.map((b) => <option key={b.id} value={b.id}>{b.brand_name}</option>)}
               </select>
               {draftErrors.brandId && <p style={{ fontSize: 11.5, color: "#E27A7A", margin: "5px 0 0 0" }}>{draftErrors.brandId}</p>}
             </div>
@@ -562,7 +663,7 @@ function RestrictionManagerSection({ t, onGoToVip }) {
           <div style={{ background: "rgba(185,129,40,0.08)", border: "1px solid rgba(185,129,40,0.25)", borderRadius: 8, padding: "9px 12px", marginBottom: 16, fontSize: 11.5, color: t.textSecondary, lineHeight: 1.5 }}>
             If this customer has an active, unconsumed gifting allowance with this brand, it will be frozen (not forfeited) at the moment this restriction is created.
           </div>
-          <button type="submit" style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif" }}>Create restriction</button>
+          <button type="submit" disabled={isSaving} style={{ width: "100%", padding: "11px 0", fontSize: 13.5, fontWeight: 500, color: "#0F0F0F", background: tokens.gold, border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "'Roboto', sans-serif", opacity: isSaving ? 0.7 : 1 }}>{isSaving ? "Saving…" : "Create restriction"}</button>
         </form>
       )}
 
@@ -576,15 +677,16 @@ function RestrictionManagerSection({ t, onGoToVip }) {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {visibleRestrictions.length === 0 && <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "24px 18px", textAlign: "center", fontSize: 13, color: t.textSecondary }}>No restrictions match this filter.</div>}
-        {visibleRestrictions.map((r) => {
+        {isLoading && <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "24px 18px", textAlign: "center", fontSize: 13, color: t.textSecondary }}>Loading restrictions…</div>}
+        {!isLoading && visibleRestrictions.length === 0 && <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "24px 18px", textAlign: "center", fontSize: 13, color: t.textSecondary }}>No restrictions match this filter.</div>}
+        {!isLoading && visibleRestrictions.map((r) => {
           const removed = !!r.removedAt;
           const expired = isExpired(r);
           return (
             <div key={r.id} style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "16px 20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                 <div>
-                  <p style={{ fontSize: 14.5, fontWeight: 500, color: t.textPrimary, margin: "0 0 3px 0" }}>{customerName(r.customerId)} <span style={{ color: t.textSecondary }}>×</span> {brandName(r.brandId)}</p>
+                  <p style={{ fontSize: 14.5, fontWeight: 500, color: t.textPrimary, margin: "0 0 3px 0" }}>{r.customerName} <span style={{ color: t.textSecondary }}>×</span> {r.brandName}</p>
                   <p style={{ fontSize: 12, color: t.textSecondary, margin: 0 }}>Created {formatDate(r.createdAt)} · {r.expiresAt ? `Expires ${formatDate(r.expiresAt)}` : "Permanent"}</p>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 500, whiteSpace: "nowrap", padding: "3px 9px", borderRadius: 6, color: removed ? t.textSecondary : expired ? "#E2A23A" : "#E27A7A", background: removed ? t.surfaceRaised : expired ? "rgba(226,162,58,0.14)" : "rgba(194,71,71,0.14)" }}>
