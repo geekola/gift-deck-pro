@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// ── Design tokens (shared system, dark-default — matches CustomerSignIn /
-// BrandPortalAuthFlow / PlatformAdminLogin) ────────────────────────────────
+// ── Design tokens (shared system, dark-default — matches UnifiedLogin /
+// PlatformAdminLogin) ───────────────────────────────────────────────────
 const tokens = {
   dark: {
     bgBase: "#0F0F0F",
@@ -36,8 +36,8 @@ function validate(password, confirm) {
 // exchanges the recovery code for a session server-side before this
 // component ever mounts; here we just confirm that session exists,
 // collect a new password, and route the person to wherever their role
-// actually belongs (mirroring the role lookup BrandPortalAuthFlow does
-// after a normal login).
+// actually belongs (mirroring the role lookup UnifiedLogin does after a
+// normal password sign-in).
 export default function ResetPassword() {
   const router = useRouter();
   const supabase = createClient();
@@ -173,7 +173,7 @@ export default function ResetPassword() {
               one from your sign-in page.
             </p>
             <button
-              onClick={() => router.push("/customer/sign-in")}
+              onClick={() => router.push("/login")}
               style={{
                 fontSize: 13,
                 fontWeight: 500,

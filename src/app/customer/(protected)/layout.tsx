@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 // Same pattern as platform-admin's guard: single authoritative,
-// server-side role check on every request, rather than relying on
-// CustomerSignIn to have checked correctly at login time. Closes the gap
+// server-side role check on every request, rather than relying on the
+// login form to have checked correctly at sign-in time. Closes the gap
 // where a brand_user/platform_admin could previously sign in via the
 // customer form and get waved through with no verification at all.
 export default async function CustomerProtectedLayout({
@@ -18,7 +18,7 @@ export default async function CustomerProtectedLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/customer/sign-in");
+    redirect("/login");
   }
 
   const { data: profile } = await supabase
@@ -28,7 +28,7 @@ export default async function CustomerProtectedLayout({
     .single();
 
   if (profile?.role !== "customer") {
-    redirect("/customer/sign-in?error=forbidden");
+    redirect("/login?error=forbidden");
   }
 
   return <>{children}</>;

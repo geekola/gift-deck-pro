@@ -21,14 +21,14 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/customer/sign-in?error=auth`);
+    return NextResponse.redirect(`${origin}/login?error=auth`);
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error || !data.user) {
-    return NextResponse.redirect(`${origin}/customer/sign-in?error=auth`);
+    return NextResponse.redirect(`${origin}/login?error=auth`);
   }
 
   const pendingBrand = data.user.user_metadata?.pending_brand_registration as
@@ -58,7 +58,39 @@ export async function GET(request: Request) {
       console.error("register_brand failed:", rpcError.message);
     }
 
-    return NextResponse.redirect(`${origin}/brand/login?status=pending`);
+    return NextResponse.redirect(`${origin}/login?status=pending`);
+  }
+
+  // Login unification (via /login) exposes Google OAuth to whichever
+  // account the email belongs to, not just new customer signups - so
+  // this needs to route by actual role rather than assuming customer.
+  // platform_admin is provisioned manually and never reaches this path
+  // in practice (no Google button on its login), but it's handled here
+  // defensively in case that ever changes.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, brand_id")
+    .eq("id", data.user.id)
+    .single();
+
+  if (profile?.role === "platform_admin") {
+    return NextResponse.redirect(`${origin}/platform-admin`);
+  }
+
+  if (profile?.role === "brand_user" && profile.brand_id) {
+    const { data: brand } = await supabase
+      .from("brands")
+      .select("status")
+      .eq("id", profile.brand_id)
+      .single();
+
+    if (brand?.status === "approved") {
+      return NextResponse.redirect(`${origin}/brand/products`);
+    }
+    if (brand?.status === "rejected") {
+      return NextResponse.redirect(`${origin}/login?status=rejected`);
+    }
+    return NextResponse.redirect(`${origin}/login?status=pending`);
   }
 
   await ensureCustomerRow(supabase, data.user);

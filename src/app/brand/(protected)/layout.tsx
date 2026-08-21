@@ -19,7 +19,7 @@ export default async function BrandProtectedLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/brand/login");
+    redirect("/login");
   }
 
   const { data: profile } = await supabase
@@ -29,7 +29,7 @@ export default async function BrandProtectedLayout({
     .single();
 
   if (profile?.role !== "brand_user" || !profile.brand_id) {
-    redirect("/brand/login?error=forbidden");
+    redirect("/login?error=forbidden");
   }
 
   const { data: brand } = await supabase
@@ -39,11 +39,11 @@ export default async function BrandProtectedLayout({
     .single();
 
   if (brand?.status === "rejected") {
-    redirect("/brand/login?status=rejected");
+    redirect("/login?status=rejected");
   }
 
   if (brand?.status !== "approved") {
-    redirect("/brand/login?status=pending");
+    redirect("/login?status=pending");
   }
 
   // MVP step 5: nothing enforced a return address getting set once a

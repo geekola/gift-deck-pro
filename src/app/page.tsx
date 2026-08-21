@@ -2,16 +2,23 @@ const GOLD = "#B98128";
 
 const sections: { label: string; links: { href: string; label: string }[] }[] = [
   {
+    label: "Shared Auth",
+    links: [
+      { href: "/login", label: "Unified sign in — customer + brand" },
+      { href: "/sign-up", label: "Get started — routes to the right signup form" },
+    ],
+  },
+  {
     label: "Platform Admin",
     links: [
-      { href: "/platform-admin/login", label: "Log in" },
+      { href: "/platform-admin/login", label: "Log in (kept separate — no self-signup path)" },
       { href: "/platform-admin", label: "Dashboard (auth-guarded) — review queue, restrictions, VIP contracts" },
     ],
   },
   {
     label: "Brand Admin Portal",
     links: [
-      { href: "/brand/login", label: "Registration / login" },
+      { href: "/brand/register", label: "Registration" },
       { href: "/brand/settings", label: "Company settings" },
       { href: "/brand/products", label: "Product catalogue" },
       { href: "/brand/products/new", label: "Product add / edit form" },
@@ -24,7 +31,7 @@ const sections: { label: string; links: { href: string; label: string }[] }[] = 
   {
     label: "Customer-Facing App",
     links: [
-      { href: "/customer/sign-in", label: "Sign in" },
+      { href: "/customer/sign-up", label: "Sign up" },
       { href: "/customer/categories", label: "Category selector" },
       { href: "/customer/deck", label: "Swipe deck" },
       { href: "/customer/gallery", label: "Saved gallery" },
