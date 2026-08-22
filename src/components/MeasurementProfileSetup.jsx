@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // ── Design tokens (shared system, dark-default) ────────────────────────────
 const tokens = {
@@ -25,8 +26,12 @@ const tokens = {
   gold: "#B98128",
 };
 
-// Full tailor's measurement field sets, by gender. Field ids are stable keys
-// (MeasurementProfile.vals is keyed by these), labels are display-only.
+// Scoped via AskUserQuestion: wire real data only, leave unlinked from any
+// onboarding flow for now (nothing redirects a new customer here today -
+// it's reachable by direct URL only). CustomerSettings.jsx's Measurements
+// tab already does the real read/write this screen now mirrors; field ids
+// are a shared, stable key set between the two (see CustomerSettings.jsx's
+// own comment referencing this file).
 const MALE_FIELDS = [
   { id: "neck", label: "Neck" },
   { id: "chest", label: "Chest" },
@@ -54,6 +59,13 @@ const FEMALE_FIELDS = [
   { id: "shoe_size", label: "Shoe Size" },
 ];
 
+// gender_set on measurement_profiles (migration 0003) is 'mens'/'womens';
+// this screen's own toggle uses 'male'/'female' - same mapping
+// CustomerSettings.jsx uses. values_cm is always canonical cm regardless of
+// preferred_unit - convert to preferred_unit on load, back to cm on save.
+const GENDER_SET_TO_UI = { mens: "male", womens: "female" };
+const UI_TO_GENDER_SET = { male: "mens", female: "womens" };
+
 function convert(value, fromUnit, toUnit) {
   if (value === "" || value == null || isNaN(Number(value))) return value;
   const num = Number(value);
@@ -63,15 +75,64 @@ function convert(value, fromUnit, toUnit) {
 }
 
 export default function MeasurementProfileSetup() {
+  const supabase = createClient();
+
   const [theme, setTheme] = useState("dark");
+  const [customerId, setCustomerId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+
   const [gender, setGender] = useState(null); // male | female
   const [unit, setUnit] = useState("in"); // cm | in
   const [vals, setVals] = useState({});
   const [touched, setTouched] = useState({});
   const [saved, setSaved] = useState(false);
+  const [skipped, setSkipped] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const t = tokens[theme];
   const fields = gender === "male" ? MALE_FIELDS : gender === "female" ? FEMALE_FIELDS : [];
+
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+      setCustomerId(user.id);
+
+      const { data: profile, error } = await supabase
+        .from("measurement_profiles")
+        .select("*")
+        .eq("customer_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        setLoadError(error.message);
+        setIsLoading(false);
+        return;
+      }
+
+      if (profile) {
+        const uiGender = GENDER_SET_TO_UI[profile.gender_set] || "female";
+        const displayUnit = profile.preferred_unit || "in";
+        const displayVals = {};
+        for (const [fieldId, cmValue] of Object.entries(profile.values_cm || {})) {
+          displayVals[fieldId] = fieldId === "shoe_size" ? cmValue : convert(cmValue, "cm", displayUnit);
+        }
+        setGender(uiGender);
+        setUnit(displayUnit);
+        setVals(displayVals);
+      }
+
+      setIsLoading(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUnitChange = (newUnit) => {
     if (newUnit === unit) return;
@@ -88,15 +149,45 @@ export default function MeasurementProfileSetup() {
   const setField = (id, value) => {
     setVals((v) => ({ ...v, [id]: value }));
     setSaved(false);
+    setSkipped(false);
   };
 
   const markTouched = (id) => setTouched((tt) => ({ ...tt, [id]: true }));
 
   const filledCount = fields.filter((f) => vals[f.id] !== undefined && vals[f.id] !== "").length;
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setTouched(fields.reduce((acc, f) => ({ ...acc, [f.id]: true }), {}));
+    setActionError("");
+
+    if (!customerId) {
+      setActionError("Couldn't load your account. Try refreshing.");
+      return;
+    }
+
+    setIsSaving(true);
+    const valuesCm = {};
+    for (const f of fields) {
+      valuesCm[f.id] = f.id === "shoe_size" ? vals[f.id] ?? null : convert(vals[f.id], unit, "cm") ?? null;
+    }
+
+    const { error } = await supabase.from("measurement_profiles").upsert(
+      {
+        customer_id: customerId,
+        gender_set: UI_TO_GENDER_SET[gender],
+        preferred_unit: unit,
+        values_cm: valuesCm,
+      },
+      { onConflict: "customer_id" }
+    );
+
+    setIsSaving(false);
+    if (error) {
+      setActionError(error.message);
+      return;
+    }
+    setSkipped(false);
     setSaved(true);
   };
 
@@ -178,7 +269,29 @@ export default function MeasurementProfileSetup() {
           </p>
         </div>
 
-        {!gender && (
+        {(loadError || actionError) && (
+          <div
+            style={{
+              background: "rgba(194,71,71,0.12)",
+              border: "1px solid rgba(194,71,71,0.4)",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontSize: 12.5,
+              color: "#E27A7A",
+              marginBottom: 16,
+            }}
+          >
+            {loadError || actionError}
+          </div>
+        )}
+
+        {isLoading && (
+          <div style={{ textAlign: "center", padding: "32px 0", fontSize: 13, color: t.textSecondary }}>
+            Loading…
+          </div>
+        )}
+
+        {!isLoading && !gender && (
           <div
             style={{
               background: t.surface,
@@ -229,7 +342,7 @@ export default function MeasurementProfileSetup() {
           </div>
         )}
 
-        {gender && (
+        {!isLoading && gender && (
           <form onSubmit={handleSave}>
             <div
               style={{
@@ -327,12 +440,13 @@ export default function MeasurementProfileSetup() {
                 }}
               >
                 {filledCount} of {fields.length} fields entered. Nothing here is required to
-                continue — fill in what you know now and add the rest later from Settings.
+                save — fill in what you know now and add the rest later from Settings.
               </p>
             </div>
 
             <button
               type="submit"
+              disabled={isSaving}
               style={{
                 width: "100%",
                 padding: "12px 0",
@@ -343,16 +457,20 @@ export default function MeasurementProfileSetup() {
                 background: tokens.gold,
                 border: "none",
                 borderRadius: 8,
-                cursor: "pointer",
+                cursor: isSaving ? "default" : "pointer",
+                opacity: isSaving ? 0.7 : 1,
                 marginBottom: 10,
               }}
             >
-              Save and Continue
+              {isSaving ? "Saving…" : "Save Measurements"}
             </button>
 
             <button
               type="button"
-              onClick={() => setSaved(true)}
+              onClick={() => {
+                setSaved(false);
+                setSkipped(true);
+              }}
               style={{
                 width: "100%",
                 padding: "11px 0",
@@ -382,7 +500,24 @@ export default function MeasurementProfileSetup() {
                   textAlign: "center",
                 }}
               >
-                Saved — next stop is the deck.
+                Saved — you can update this anytime from Settings.
+              </div>
+            )}
+
+            {skipped && (
+              <div
+                style={{
+                  marginTop: 16,
+                  background: t.surfaceRaised,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: 12.5,
+                  color: t.textSecondary,
+                  textAlign: "center",
+                }}
+              >
+                No problem — nothing was saved. Add this anytime from Settings.
               </div>
             )}
           </form>
@@ -390,8 +525,7 @@ export default function MeasurementProfileSetup() {
       </div>
 
       <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 18, opacity: 0.7, textAlign: "center" }}>
-        Prototype preview — mock data only, no live backend connection. PDF export of this chart
-        is planned but not built in this screen yet.
+        PDF export of this chart is planned but not built in this screen yet.
       </p>
     </div>
   );
