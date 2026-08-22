@@ -30,6 +30,7 @@ export default function PlatformAdminLogin() {
   const [mode, setMode] = useState("login"); // login | forgot | forgot-sent
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -195,24 +196,47 @@ export default function PlatformAdminLogin() {
             >
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "11px 14px",
-                fontSize: 14,
-                fontFamily: "'Roboto', sans-serif",
-                color: t.textPrimary,
-                background: t.inputBg,
-                border: `1px solid ${t.border}`,
-                borderRadius: 8,
-                outline: "none",
-              }}
-            />
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "11px 14px",
+                  paddingRight: 52,
+                  fontSize: 14,
+                  fontFamily: "'Roboto', sans-serif",
+                  color: t.textPrimary,
+                  background: t.inputBg,
+                  border: `1px solid ${t.border}`,
+                  borderRadius: 8,
+                  outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  color: tokens.gold,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'Roboto', sans-serif",
+                  padding: 0,
+                }}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
           <p style={{ textAlign: "right", fontSize: 12.5, margin: "0 0 20px 0" }}>
             <span

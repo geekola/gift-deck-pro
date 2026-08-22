@@ -50,6 +50,7 @@ export default function UnifiedLogin() {
   const [rejectionReason, setRejectionReason] = useState("");
 
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -116,10 +117,11 @@ export default function UnifiedLogin() {
     letterSpacing: "0.01em",
   };
 
-  const inputStyle = (hasError) => ({
+  const inputStyle = (hasError, hasToggle) => ({
     width: "100%",
     boxSizing: "border-box",
     padding: "11px 14px",
+    paddingRight: hasToggle ? 52 : 14,
     fontSize: 14,
     fontFamily: "'Roboto', sans-serif",
     color: t.textPrimary,
@@ -128,6 +130,21 @@ export default function UnifiedLogin() {
     borderRadius: 8,
     outline: "none",
   });
+
+  const passwordToggleStyle = {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: 11.5,
+    fontWeight: 500,
+    color: tokens.gold,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    fontFamily: "'Roboto', sans-serif",
+    padding: 0,
+  };
 
   const markTouched = (key) => setTouched((tt) => ({ ...tt, [key]: true }));
 
@@ -362,14 +379,23 @@ export default function UnifiedLogin() {
               </div>
               <div style={{ marginBottom: 10 }}>
                 <label style={labelStyle}>Password</label>
-                <input
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
-                  onBlur={() => markTouched("password")}
-                  placeholder="Your password"
-                  style={inputStyle(touched.password && errors.password)}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
+                    onBlur={() => markTouched("password")}
+                    placeholder="Your password"
+                    style={inputStyle(touched.password && errors.password, true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={passwordToggleStyle}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {touched.password && errors.password && (
                   <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors.password}</p>
                 )}

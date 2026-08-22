@@ -46,6 +46,8 @@ export default function ResetPassword() {
   const [status, setStatus] = useState("checking"); // checking | form | invalid | done
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState("");
@@ -76,10 +78,11 @@ export default function ResetPassword() {
     letterSpacing: "0.01em",
   };
 
-  const inputStyle = (hasError) => ({
+  const inputStyle = (hasError, hasToggle) => ({
     width: "100%",
     boxSizing: "border-box",
     padding: "11px 14px",
+    paddingRight: hasToggle ? 52 : 14,
     fontSize: 14,
     fontFamily: "'Roboto', sans-serif",
     color: t.textPrimary,
@@ -88,6 +91,21 @@ export default function ResetPassword() {
     borderRadius: 8,
     outline: "none",
   });
+
+  const passwordToggleStyle = {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: 11.5,
+    fontWeight: 500,
+    color: tokens.gold,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    fontFamily: "'Roboto', sans-serif",
+    padding: 0,
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -222,30 +240,48 @@ export default function ResetPassword() {
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 16 }}>
                 <label style={labelStyle}>New Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={() => markTouched("password")}
-                  placeholder="At least 8 characters"
-                  disabled={status === "done"}
-                  style={inputStyle(touched.password && errors.password)}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => markTouched("password")}
+                    placeholder="At least 8 characters"
+                    disabled={status === "done"}
+                    style={inputStyle(touched.password && errors.password, true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={passwordToggleStyle}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {touched.password && errors.password && (
                   <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors.password}</p>
                 )}
               </div>
               <div style={{ marginBottom: 20 }}>
                 <label style={labelStyle}>Confirm Password</label>
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  onBlur={() => markTouched("confirm")}
-                  placeholder="Re-enter your new password"
-                  disabled={status === "done"}
-                  style={inputStyle(touched.confirm && errors.confirm)}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    onBlur={() => markTouched("confirm")}
+                    placeholder="Re-enter your new password"
+                    disabled={status === "done"}
+                    style={inputStyle(touched.confirm && errors.confirm, true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    style={passwordToggleStyle}
+                  >
+                    {showConfirm ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {touched.confirm && errors.confirm && (
                   <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors.confirm}</p>
                 )}

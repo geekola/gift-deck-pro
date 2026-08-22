@@ -42,6 +42,9 @@ function validateSignup(form) {
   if (!form.password || form.password.length < 8) {
     errors.password = "Password must be at least 8 characters.";
   }
+  if (form.confirmPassword !== form.password) {
+    errors.confirmPassword = "Passwords don't match.";
+  }
   if (!form.industry) errors.industry = "Select an industry.";
   return errors;
 }
@@ -57,7 +60,15 @@ export default function CustomerSignUp() {
   const [mode, setMode] = useState("signup"); // signup | check-email
   const [pendingEmail, setPendingEmail] = useState("");
 
-  const [signupForm, setSignupForm] = useState({ name: "", email: "", password: "", industry: "" });
+  const [signupForm, setSignupForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    industry: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [authError, setAuthError] = useState("");
@@ -74,10 +85,11 @@ export default function CustomerSignUp() {
     letterSpacing: "0.01em",
   };
 
-  const inputStyle = (hasError) => ({
+  const inputStyle = (hasError, hasToggle) => ({
     width: "100%",
     boxSizing: "border-box",
     padding: "11px 14px",
+    paddingRight: hasToggle ? 52 : 14,
     fontSize: 14,
     fontFamily: "'Roboto', sans-serif",
     color: t.textPrimary,
@@ -86,6 +98,21 @@ export default function CustomerSignUp() {
     borderRadius: 8,
     outline: "none",
   });
+
+  const passwordToggleStyle = {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: 11.5,
+    fontWeight: 500,
+    color: tokens.gold,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    fontFamily: "'Roboto', sans-serif",
+    padding: 0,
+  };
 
   const markTouched = (key) => setTouched((tt) => ({ ...tt, [key]: true }));
 
@@ -104,7 +131,7 @@ export default function CustomerSignUp() {
     e.preventDefault();
     const errs = validateSignup(signupForm);
     setErrors(errs);
-    setTouched({ name: true, email: true, password: true, industry: true });
+    setTouched({ name: true, email: true, password: true, confirmPassword: true, industry: true });
     if (Object.keys(errs).length > 0) return;
 
     setAuthError("");
@@ -286,16 +313,49 @@ export default function CustomerSignUp() {
 
               <div style={{ marginBottom: 14 }}>
                 <label style={labelStyle}>Password</label>
-                <input
-                  type="password"
-                  value={signupForm.password}
-                  onChange={(e) => setSignupForm((f) => ({ ...f, password: e.target.value }))}
-                  onBlur={() => markTouched("password")}
-                  placeholder="At least 8 characters"
-                  style={inputStyle(touched.password && errors.password)}
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={signupForm.password}
+                    onChange={(e) => setSignupForm((f) => ({ ...f, password: e.target.value }))}
+                    onBlur={() => markTouched("password")}
+                    placeholder="At least 8 characters"
+                    style={inputStyle(touched.password && errors.password, true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={passwordToggleStyle}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
                 {touched.password && errors.password && (
                   <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors.password}</p>
+                )}
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={labelStyle}>Confirm Password</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={signupForm.confirmPassword}
+                    onChange={(e) => setSignupForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                    onBlur={() => markTouched("confirmPassword")}
+                    placeholder="Re-enter your password"
+                    style={inputStyle(touched.confirmPassword && errors.confirmPassword, true)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    style={passwordToggleStyle}
+                  >
+                    {showConfirmPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+                {touched.confirmPassword && errors.confirmPassword && (
+                  <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors.confirmPassword}</p>
                 )}
               </div>
 

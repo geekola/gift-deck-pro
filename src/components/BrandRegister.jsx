@@ -33,6 +33,7 @@ const FIELD_ROWS = [
   [{ key: "brandName", label: "Brand Name", type: "text", placeholder: "e.g. Atelier Noir" }],
   [{ key: "email", label: "Admin Login Email", type: "email", placeholder: "admin@yourbrand.com" }],
   [{ key: "password", label: "Password", type: "password", placeholder: "At least 8 characters" }],
+  [{ key: "confirmPassword", label: "Confirm Password", type: "password", placeholder: "Re-enter your password" }],
   [
     { key: "contactFirstName", label: "Primary Contact First Name", type: "text", placeholder: "First name" },
     { key: "contactLastName", label: "Primary Contact Last Name", type: "text", placeholder: "Last name" },
@@ -63,6 +64,9 @@ function validate(form) {
   if (!form.password || form.password.length < 8) {
     errors.password = "Password must be at least 8 characters.";
   }
+  if (form.confirmPassword !== form.password) {
+    errors.confirmPassword = "Passwords don't match.";
+  }
   if (!form.contactFirstName.trim()) errors.contactFirstName = "First name is required.";
   if (!form.contactLastName.trim()) errors.contactLastName = "Last name is required.";
   if (!form.phoneNumber.trim()) {
@@ -88,6 +92,7 @@ const emptyForm = {
   brandName: "",
   email: "",
   password: "",
+  confirmPassword: "",
   contactFirstName: "",
   contactLastName: "",
   phoneNumber: "",
@@ -107,6 +112,7 @@ export default function BrandRegister() {
   const [theme, setTheme] = useState("dark");
   const [step, setStep] = useState("register"); // register | check-email
   const [form, setForm] = useState(emptyForm);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState("");
@@ -194,10 +200,11 @@ export default function BrandRegister() {
     }
   };
 
-  const inputStyle = (key) => ({
+  const inputStyle = (key, hasToggle) => ({
     width: "100%",
     boxSizing: "border-box",
     padding: "11px 14px",
+    paddingRight: hasToggle ? 52 : 14,
     fontSize: 14,
     fontFamily: "'Roboto', sans-serif",
     fontWeight: 400,
@@ -207,6 +214,21 @@ export default function BrandRegister() {
     borderRadius: 8,
     outline: "none",
   });
+
+  const passwordToggleStyle = {
+    position: "absolute",
+    right: 12,
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: 11.5,
+    fontWeight: 500,
+    color: tokens.gold,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    fontFamily: "'Roboto', sans-serif",
+    padding: 0,
+  };
 
   const labelStyle = {
     display: "block",
@@ -309,17 +331,37 @@ export default function BrandRegister() {
             <form onSubmit={handleSubmit}>
               {FIELD_ROWS.map((row, rowIdx) => (
                 <div key={rowIdx} style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-                  {row.map((field) => (
-                    <div key={field.key} style={{ flex: 1, minWidth: 0 }}>
-                      <label style={labelStyle}>{field.label}</label>
+                  {row.map((field) => {
+                    const isPassword = field.type === "password";
+                    const input = (
                       <input
-                        type={field.type}
+                        type={isPassword && visiblePasswords[field.key] ? "text" : field.type}
                         placeholder={field.placeholder}
                         value={form[field.key]}
                         onChange={handleChange(field.key)}
                         onBlur={handleBlur(field.key)}
-                        style={inputStyle(field.key)}
+                        style={inputStyle(field.key, isPassword)}
                       />
+                    );
+                    return (
+                    <div key={field.key} style={{ flex: 1, minWidth: 0 }}>
+                      <label style={labelStyle}>{field.label}</label>
+                      {isPassword ? (
+                        <div style={{ position: "relative" }}>
+                          {input}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVisiblePasswords((v) => ({ ...v, [field.key]: !v[field.key] }))
+                            }
+                            style={passwordToggleStyle}
+                          >
+                            {visiblePasswords[field.key] ? "Hide" : "Show"}
+                          </button>
+                        </div>
+                      ) : (
+                        input
+                      )}
                       {field.helper && (
                         <p style={{ fontSize: 12, color: t.textSecondary, margin: "5px 0 0 0", lineHeight: 1.4 }}>
                           {field.helper}
@@ -329,7 +371,8 @@ export default function BrandRegister() {
                         <p style={{ fontSize: 12, color: "#E27A7A", margin: "5px 0 0 0" }}>{errors[field.key]}</p>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
 
