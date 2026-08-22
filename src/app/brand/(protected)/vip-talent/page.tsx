@@ -1,4 +1,4 @@
-import VipTalentContracts from "@/components/mock/VipTalentContracts";
+import VipTalentContracts from "@/components/VipTalentContracts";
 
 export default function Page() {
   return <VipTalentContracts />;
