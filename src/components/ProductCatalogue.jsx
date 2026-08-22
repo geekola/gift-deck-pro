@@ -68,7 +68,6 @@ export default function ProductCatalogue() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [expandedId, setExpandedId] = useState(null);
   const [filter, setFilter] = useState("all");
   const [products, setProducts] = useState([]);
@@ -109,7 +108,12 @@ export default function ProductCatalogue() {
     })();
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching BrandNav.jsx's sidebar - the per-page "Preview:
+  // Light/Dark" toggle was removed along with the redundant "Gift Deck
+  // Pro / Brand Portal" header (BrandNav already renders that once, in
+  // the persistent layout), and there's no shared theme state to hook
+  // a toggle to across the sidebar + content column.
+  const t = tokens.dark;
 
   const filtered = products.filter((p) => {
     if (filter === "all") return true;
@@ -136,51 +140,6 @@ export default function ProductCatalogue() {
         transition: "background 0.2s ease",
       }}
     >
-
-      {/* Top bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          maxWidth: 980,
-          margin: "0 auto 24px auto",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary }}>
-            Gift Deck Pro
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              letterSpacing: "0.03em",
-            }}
-          >
-            Brand Portal
-          </span>
-        </div>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "5px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-          }}
-          title="In the real app this lives in Settings only — exposed here for preview convenience"
-        >
-          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
-        </button>
-      </div>
 
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
         <div

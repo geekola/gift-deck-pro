@@ -93,7 +93,6 @@ export default function ProductForm() {
   const supabase = createClient();
   const fileInputRef = useRef(null);
 
-  const [theme, setTheme] = useState("dark");
   const [erpSyncEnabled, setErpSyncEnabled] = useState(false); // per-product products.erp_synced
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
@@ -120,7 +119,9 @@ export default function ProductForm() {
     variants: [newVariant()],
   });
 
-  const t = tokens[theme];
+  // Dark only, matching BrandNav.jsx's sidebar - see ProductCatalogue.jsx
+  // for why the per-page theme toggle was removed.
+  const t = tokens.dark;
 
   // ProductForm only ever renders inside the brand (protected) route
   // group, so a session + approved brand_user is guaranteed by the
@@ -418,67 +419,37 @@ export default function ProductForm() {
       }}
     >
 
-      {/* Top bar */}
+      {/* Top bar - just the ERP toggle now. The "Gift Deck Pro / Brand
+          Portal" branding and theme-preview toggle that used to live here
+          were removed as redundant with BrandNav.jsx's persistent sidebar,
+          which already renders the same branding once. */}
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           alignItems: "center",
           marginBottom: 24,
           maxWidth: 720,
           margin: "0 auto 24px auto",
         }}
       >
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary }}>
-            Gift Deck Pro
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              letterSpacing: "0.03em",
-            }}
-          >
-            Brand Portal
-          </span>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={() => setErpSyncEnabled((v) => !v)}
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: erpSyncEnabled ? tokens.gold : t.textSecondary,
-              background: erpSyncEnabled ? "rgba(185,129,40,0.12)" : "transparent",
-              border: `1px solid ${erpSyncEnabled ? tokens.gold : t.border}`,
-              borderRadius: 6,
-              padding: "5px 10px",
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-            title="Stock for this item is mirrored from an external ERP instead of tracked manually — stock quantity fields become read-only"
-          >
-            {erpSyncEnabled ? "ERP-Synced Item" : "Manual Stock"}
-          </button>
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              background: "transparent",
-              border: `1px solid ${t.border}`,
-              borderRadius: 6,
-              padding: "5px 10px",
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-          >
-            {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
-          </button>
-        </div>
+        <button
+          onClick={() => setErpSyncEnabled((v) => !v)}
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            color: erpSyncEnabled ? tokens.gold : t.textSecondary,
+            background: erpSyncEnabled ? "rgba(185,129,40,0.12)" : "transparent",
+            border: `1px solid ${erpSyncEnabled ? tokens.gold : t.border}`,
+            borderRadius: 6,
+            padding: "5px 10px",
+            cursor: "pointer",
+            fontFamily: "'Roboto', sans-serif",
+          }}
+          title="Stock for this item is mirrored from an external ERP instead of tracked manually — stock quantity fields become read-only"
+        >
+          {erpSyncEnabled ? "ERP-Synced Item" : "Manual Stock"}
+        </button>
       </div>
 
       <div style={{ maxWidth: 720, margin: "0 auto" }}>

@@ -41,13 +41,14 @@ function formatDate(iso) {
 export default function VipTalentContracts() {
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [vips, setVips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  const t = tokens[theme];
+  // Dark only, matching BrandNav.jsx's sidebar - see ProductCatalogue.jsx
+  // for why the per-page theme toggle was removed.
+  const t = tokens.dark;
 
   const statusBadge = (status) => {
     const map = {
@@ -145,50 +146,6 @@ export default function VipTalentContracts() {
         transition: "background 0.2s ease",
       }}
     >
-      {/* Top bar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          maxWidth: 900,
-          margin: "0 auto 24px auto",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary }}>
-            Gift Deck Pro
-          </span>
-          <span
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              letterSpacing: "0.03em",
-            }}
-          >
-            Brand Portal
-          </span>
-        </div>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "5px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-          }}
-        >
-          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
-        </button>
-      </div>
-
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <div style={{ marginBottom: 18 }}>
           <div
