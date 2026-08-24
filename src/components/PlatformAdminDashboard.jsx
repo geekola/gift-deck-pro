@@ -1007,6 +1007,209 @@ function VipContractsSection({ t }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// SECTION: Customers
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Built after the user asked "how does a customer become a VIP?" and the
+// answer turned out to be "nowhere in the app — manual SQL only." tier is
+// an admin-assigned classification (migration 0018's own comment calls it
+// that), but there was never a customer list/detail screen on the admin
+// side to assign it from — and until migration 0024, no RLS UPDATE policy
+// that would have let a client-side write through even if there were.
+function CustomersSection({ t }) {
+  const supabase = createClient();
+
+  const [customers, setCustomers] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [isTogglingTier, setIsTogglingTier] = useState(false);
+  const [detailCounts, setDetailCounts] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const mapCustomer = (row) => ({
+    id: row.id,
+    name: row.name,
+    industry: row.industry,
+    tier: row.tier,
+    profileComplete: row.profile_complete,
+    createdAt: row.created_at,
+  });
+
+  const loadCustomers = async () => {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("id, name, industry, tier, profile_complete, created_at")
+      .order("name");
+
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      setLoadError("");
+      const mapped = (data || []).map(mapCustomer);
+      setCustomers(mapped);
+      setSelectedId((current) => current ?? mapped[0]?.id ?? null);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selected = customers.find((c) => c.id === selectedId) || null;
+
+  // Approved-brand / requisition counts are informational only (nothing
+  // here writes to either table) — loaded per selection rather than
+  // joined into the roster query so the list itself stays one cheap
+  // query regardless of how many customers there are.
+  useEffect(() => {
+    if (!selectedId) {
+      setDetailCounts(null);
+      return;
+    }
+    setDetailLoading(true);
+    (async () => {
+      const [{ count: approvedBrands }, { count: requisitions }] = await Promise.all([
+        supabase
+          .from("customer_brand_access")
+          .select("*", { count: "exact", head: true })
+          .eq("customer_id", selectedId)
+          .eq("status", "approved"),
+        supabase
+          .from("requisitions")
+          .select("*", { count: "exact", head: true })
+          .eq("customer_id", selectedId),
+      ]);
+      setDetailCounts({ approvedBrands: approvedBrands ?? 0, requisitions: requisitions ?? 0 });
+      setDetailLoading(false);
+    })();
+  }, [selectedId]);
+
+  const visibleCustomers = customers.filter((c) => (filter === "all" ? true : c.tier === filter));
+  const vipCount = customers.filter((c) => c.tier === "VIP").length;
+
+  const toggleTier = async () => {
+    if (!selected) return;
+    setActionError("");
+    setIsTogglingTier(true);
+    const nextTier = selected.tier === "VIP" ? "general" : "VIP";
+
+    const { error } = await supabase.from("customers").update({ tier: nextTier }).eq("id", selected.id);
+
+    if (error) {
+      setActionError(error.message);
+      setIsTogglingTier(false);
+      return;
+    }
+    setCustomers((cs) => cs.map((c) => (c.id === selected.id ? { ...c, tier: nextTier } : c)));
+    setIsTogglingTier(false);
+  };
+
+  const labelStyle = { display: "block", fontSize: 12, fontWeight: 500, color: t.textSecondary, marginBottom: 4 };
+  const valueStyle = { fontSize: 14, color: t.textPrimary, margin: "0 0 14px 0" };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>Customers</h1>
+        <p style={{ fontSize: 13, color: t.textSecondary, margin: 0 }}>
+          {customers.length} customer{customers.length === 1 ? "" : "s"} · {vipCount} VIP
+        </p>
+      </div>
+
+      {(loadError || actionError) && (
+        <div style={{ background: "rgba(194,71,71,0.12)", border: "1px solid rgba(194,71,71,0.4)", borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: "#E27A7A", marginBottom: 16 }}>
+          {loadError || actionError}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {[{ key: "all", label: "All" }, { key: "general", label: "General" }, { key: "VIP", label: "VIP" }].map((f) => {
+          const active = filter === f.key;
+          return (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ fontSize: 12.5, fontWeight: 500, padding: "7px 13px", borderRadius: 7, cursor: "pointer", fontFamily: "'Roboto', sans-serif", border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`, background: active ? "rgba(185,129,40,0.12)" : "transparent", color: active ? tokens.gold : t.textSecondary }}>
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ display: "flex", gap: 16 }}>
+        <div style={{ flex: "0 0 280px", background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, overflow: "hidden" }}>
+          {isLoading && <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>Loading customers…</div>}
+          {!isLoading && visibleCustomers.length === 0 && <div style={{ padding: "24px 18px", fontSize: 13, color: t.textSecondary }}>No customers match this filter.</div>}
+          {!isLoading && visibleCustomers.map((c, idx) => {
+            const isSelected = c.id === selectedId;
+            return (
+              <div
+                key={c.id}
+                onClick={() => setSelectedId(c.id)}
+                style={{ padding: "13px 16px", cursor: "pointer", borderBottom: idx < visibleCustomers.length - 1 ? `1px solid ${t.border}` : "none", background: isSelected ? t.surfaceRaised : "transparent", borderLeft: isSelected ? `2px solid ${tokens.gold}` : "2px solid transparent", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: t.textPrimary, margin: "0 0 2px 0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</p>
+                  <p style={{ fontSize: 11.5, color: t.textSecondary, margin: 0 }}>{c.industry || "No industry on file"}</p>
+                </div>
+                {c.tier === "VIP" && (
+                  <span style={{ fontSize: 10.5, fontWeight: 500, color: tokens.gold, background: "rgba(185,129,40,0.14)", padding: "2px 8px", borderRadius: 5, flexShrink: 0 }}>VIP</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ flex: 1, background: t.surface, border: `1px solid ${t.border}`, borderRadius: 12, padding: "22px 24px" }}>
+          {!selected && <p style={{ fontSize: 13, color: t.textSecondary }}>Select a customer from the list.</p>}
+          {selected && (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary, margin: "0 0 4px 0" }}>{selected.name}</h2>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: t.textSecondary, background: t.surfaceRaised, padding: "2px 9px", borderRadius: 6 }}>
+                    {selected.industry || "No industry on file"}
+                  </span>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 500, color: selected.tier === "VIP" ? tokens.gold : t.textSecondary, background: selected.tier === "VIP" ? "rgba(185,129,40,0.14)" : t.surfaceRaised, padding: "3px 9px", borderRadius: 6 }}>
+                  {selected.tier === "VIP" ? "VIP" : "General"}
+                </span>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 20px", marginBottom: 4 }}>
+                <div><span style={labelStyle}>Profile Status</span><p style={valueStyle}>{selected.profileComplete ? "Complete" : "Incomplete"}</p></div>
+                <div><span style={labelStyle}>Customer Since</span><p style={valueStyle}>{formatDate(selected.createdAt)}</p></div>
+                <div><span style={labelStyle}>Approved Brands</span><p style={valueStyle}>{detailLoading ? "…" : detailCounts?.approvedBrands ?? 0}</p></div>
+                <div><span style={labelStyle}>Requisitions Submitted</span><p style={valueStyle}>{detailLoading ? "…" : detailCounts?.requisitions ?? 0}</p></div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: t.surfaceRaised, border: `1px solid ${t.border}`, borderRadius: 8, padding: "14px 16px", marginTop: 12 }}>
+                <div>
+                  <p style={{ fontSize: 13.5, fontWeight: 500, color: t.textPrimary, margin: "0 0 3px 0" }}>VIP Tier</p>
+                  <p style={{ fontSize: 11.5, color: t.textSecondary, margin: 0, maxWidth: 380 }}>
+                    Unlocks the VIP Talent Contracts roster for this customer. Doesn't change gifting
+                    allowances or brand access on its own.
+                  </p>
+                </div>
+                <button
+                  onClick={toggleTier}
+                  disabled={isTogglingTier}
+                  style={{ flexShrink: 0, width: 44, height: 24, borderRadius: 12, border: "none", cursor: "pointer", background: selected.tier === "VIP" ? tokens.gold : t.border, position: "relative", marginLeft: 16, opacity: isTogglingTier ? 0.6 : 1 }}
+                >
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: selected.tier === "VIP" ? 23 : 3, transition: "left 0.15s ease" }} />
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // SHELL: Platform Admin Dashboard
 // ═══════════════════════════════════════════════════════════════════════
 export default function PlatformAdminDashboard() {
@@ -1025,6 +1228,7 @@ export default function PlatformAdminDashboard() {
 
   const NAV_ITEMS = [
     { key: "review_queue", label: "Review Queue" },
+    { key: "customers", label: "Customers" },
     { key: "restrictions", label: "Restriction Manager" },
     { key: "vip_contracts", label: "VIP Talent Contracts" },
   ];
@@ -1149,6 +1353,7 @@ export default function PlatformAdminDashboard() {
           }}
         />
         {activeSection === "review_queue" && <ReviewQueueSection t={t} />}
+        {activeSection === "customers" && <CustomersSection t={t} />}
         {activeSection === "restrictions" && (
           <RestrictionManagerSection t={t} onGoToVip={() => setActiveSection("vip_contracts")} />
         )}
