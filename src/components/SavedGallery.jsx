@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const tokens = {
@@ -64,11 +65,11 @@ function groupByBrand(items) {
 
 export default function SavedGallery() {
   const supabase = createClient();
+  const router = useRouter();
 
   const [savedItems, setSavedItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [removeConfirmId, setRemoveConfirmId] = useState(null);
-  const [showMovePlaceholder, setShowMovePlaceholder] = useState(false);
   const [toast, setToast] = useState(null);
   const [customerId, setCustomerId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -144,85 +145,19 @@ export default function SavedGallery() {
     }
   };
 
+  // ReviewAndSubmit.jsx (/customer/review) is real now and loads every
+  // saved item for the customer itself - it doesn't take a selection.
+  // Gallery's per-item checkboxes are still useful as an "I'm ready for
+  // these" signal, but there's no way to hand a subset off to that
+  // screen without changing what it loads, so this just navigates and
+  // leaves selection as a visual affordance for now.
   const handleMoveToReview = () => {
-    setShowMovePlaceholder(true);
+    router.push("/customer/review");
   };
 
   const selectedBrandsCount = new Set(
     savedItems.filter((i) => selectedIds.includes(i.id)).map((i) => i.brandName)
   ).size;
-
-  if (showMovePlaceholder) {
-    const selectedItems = savedItems.filter((i) => selectedIds.includes(i.id));
-    const byBrand = groupByBrand(selectedItems);
-    return (
-      <div
-        style={{
-          fontFamily: "'Roboto', sans-serif",
-          background: t.bgBase,
-          minHeight: 640,
-          padding: "28px 16px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: 400, paddingTop: 40 }}>
-          <div
-            style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 14 }}
-          />
-          <h1 style={{ fontSize: 19, fontWeight: 700, color: t.textPrimary, margin: "0 0 8px 0" }}>
-            Review & Submit
-          </h1>
-          <p style={{ fontSize: 13, color: t.textSecondary, margin: "0 0 20px 0", lineHeight: 1.6 }}>
-            This screen — where a shipment request is actually reviewed and submitted, split one
-            invoice per brand — hasn't been built yet. Confirming the right items carried through:
-          </p>
-
-          {Object.entries(byBrand).map(([brand, items]) => (
-            <div
-              key={brand}
-              style={{
-                background: t.surface,
-                border: `1px solid ${t.border}`,
-                borderRadius: 10,
-                padding: "12px 16px",
-                marginBottom: 10,
-              }}
-            >
-              <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 6px 0" }}>
-                {brand}
-              </p>
-              {items.map((i) => (
-                <p key={i.id} style={{ fontSize: 12.5, color: t.textSecondary, margin: "2px 0" }}>
-                  {i.name}
-                </p>
-              ))}
-            </div>
-          ))}
-
-          <button
-            onClick={() => setShowMovePlaceholder(false)}
-            style={{
-              width: "100%",
-              marginTop: 10,
-              padding: "11px 0",
-              fontSize: 13,
-              fontWeight: 500,
-              color: t.textSecondary,
-              background: "transparent",
-              border: `1px solid ${t.border}`,
-              borderRadius: 8,
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-          >
-            ← Back to Saved
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -559,8 +494,7 @@ export default function SavedGallery() {
       )}
 
       <p style={{ fontSize: 11, color: t.textSecondary, marginTop: 14, opacity: 0.7, textAlign: "center" }}>
-        Selecting multiple brands will split into separate invoices per brand once Review &amp;
-        Submit exists.
+        Review &amp; Submit splits your order into a separate invoice per brand automatically.
       </p>
     </div>
   );
