@@ -118,15 +118,13 @@ const GENDER_SET_TO_UI = { mens: "male", womens: "female" };
 const UI_TO_GENDER_SET = { male: "mens", female: "womens" };
 
 const SECTIONS = [
-  { key: "appearance", label: "Appearance" },
   { key: "contacts", label: "Contacts" },
   { key: "addresses", label: "Shipping Addresses" },
   { key: "measurements", label: "Measurements" },
 ];
 
 export default function CustomerSettings() {
-  const [theme, setTheme] = useState("dark");
-  const [activeSection, setActiveSection] = useState("appearance");
+  const [activeSection, setActiveSection] = useState("contacts");
 
   const supabase = createClient();
   const [customerId, setCustomerId] = useState(null);
@@ -197,7 +195,13 @@ export default function CustomerSettings() {
     })();
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching CustomerNav.jsx's top bar. The old Appearance tab
+  // here (a Theme dark/light toggle) never actually persisted anywhere -
+  // same local-only useState every other screen had - and its own copy
+  // ("This is the only place to change it") was already misleading before
+  // today; removed along with every other screen's per-page toggle rather
+  // than leave one lone, still-non-persisting "canonical" setting behind.
+  const t = tokens.dark;
   const fields = gender === "male" ? MALE_FIELDS : FEMALE_FIELDS;
 
   // ── Address handlers ──
@@ -449,17 +453,6 @@ export default function CustomerSettings() {
     >
 
       <div style={{ width: "100%", maxWidth: 440 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 18,
-          }}
-        >
-          <span style={{ fontSize: 17, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
-        </div>
-
         <div style={{ marginBottom: 18 }}>
           <div
             style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }}
@@ -516,51 +509,6 @@ export default function CustomerSettings() {
             );
           })}
         </div>
-
-        {/* ── Appearance ── */}
-        {activeSection === "appearance" && (
-          <div
-            style={{
-              background: t.surface,
-              border: `1px solid ${t.border}`,
-              borderRadius: 12,
-              padding: "18px 20px",
-            }}
-          >
-            <p style={{ fontSize: 13, fontWeight: 500, color: t.textPrimary, margin: "0 0 4px 0" }}>
-              Theme
-            </p>
-            <p style={{ fontSize: 12, color: t.textSecondary, margin: "0 0 14px 0", lineHeight: 1.5 }}>
-              Dark is the default across Gift Deck Pro. This is the only place to change it.
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {["dark", "light"].map((mode) => {
-                const active = theme === mode;
-                return (
-                  <button
-                    key={mode}
-                    onClick={() => setTheme(mode)}
-                    style={{
-                      flex: 1,
-                      padding: "11px 0",
-                      fontSize: 13,
-                      fontWeight: 500,
-                      borderRadius: 8,
-                      cursor: "pointer",
-                      fontFamily: "'Roboto', sans-serif",
-                      border: active ? `1px solid ${tokens.gold}` : `1px solid ${t.border}`,
-                      background: active ? "rgba(185,129,40,0.12)" : "transparent",
-                      color: active ? tokens.gold : t.textPrimary,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {mode}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* ── Addresses ── */}
         {activeSection === "addresses" && (

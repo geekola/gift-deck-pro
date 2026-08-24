@@ -116,7 +116,6 @@ function StateProgress({ state, t }) {
 export default function OrderStatus() {
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [filter, setFilter] = useState("active");
   const [expandedId, setExpandedId] = useState(null);
   const [requisitions, setRequisitions] = useState([]);
@@ -154,7 +153,10 @@ export default function OrderStatus() {
     })();
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching CustomerNav.jsx's top bar - see
+  // ProductCatalogue.jsx (brand side) for why the per-page theme toggle
+  // was removed.
+  const t = tokens.dark;
 
   const visible = requisitions.filter((r) => {
     if (filter === "active") return r.state !== "declined";
@@ -177,35 +179,6 @@ export default function OrderStatus() {
         transition: "background 0.2s ease",
       }}
     >
-
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 18,
-        }}
-      >
-        <span style={{ fontSize: 17, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "5px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-          }}
-        >
-          {theme === "dark" ? "Light" : "Dark"}
-        </button>
-      </div>
 
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ marginBottom: 16 }}>

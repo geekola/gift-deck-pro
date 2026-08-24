@@ -59,7 +59,6 @@ function formatPrice(amount, currency) {
 export default function SwipeDeck() {
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [activeCategory, setActiveCategory] = useState("Formal");
   const [swipedIds, setSwipedIds] = useState([]); // ids removed from any deck via like/pass/undo-tracking
   const [savedItems, setSavedItems] = useState([]);
@@ -110,7 +109,10 @@ export default function SwipeDeck() {
     })();
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching CustomerNav.jsx's top bar - see
+  // ProductCatalogue.jsx (brand side) for why the per-page theme toggle
+  // was removed.
+  const t = tokens.dark;
   const cards = allCards.filter(
     (c) => c.category === activeCategory && !swipedIds.includes(c.id)
   );
@@ -262,41 +264,22 @@ export default function SwipeDeck() {
           width: "100%",
           maxWidth: 380,
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           alignItems: "center",
           marginBottom: 16,
         }}
       >
-        <span style={{ fontSize: 17, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
-        <div style={{ display: "flex", gap: 8 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: tokens.gold,
-              background: "rgba(185,129,40,0.12)",
-              padding: "5px 10px",
-              borderRadius: 6,
-            }}
-          >
-            {savedItems.length} saved
-          </div>
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: t.textSecondary,
-              background: "transparent",
-              border: `1px solid ${t.border}`,
-              borderRadius: 6,
-              padding: "5px 10px",
-              cursor: "pointer",
-              fontFamily: "'Roboto', sans-serif",
-            }}
-          >
-            {theme === "dark" ? "Light" : "Dark"}
-          </button>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 500,
+            color: tokens.gold,
+            background: "rgba(185,129,40,0.12)",
+            padding: "5px 10px",
+            borderRadius: 6,
+          }}
+        >
+          {savedItems.length} saved
         </div>
       </div>
 

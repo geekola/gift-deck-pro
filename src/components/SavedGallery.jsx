@@ -65,7 +65,6 @@ function groupByBrand(items) {
 export default function SavedGallery() {
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [savedItems, setSavedItems] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [removeConfirmId, setRemoveConfirmId] = useState(null);
@@ -101,7 +100,10 @@ export default function SavedGallery() {
     })();
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching CustomerNav.jsx's top bar - see
+  // ProductCatalogue.jsx (brand side) for why the per-page theme toggle
+  // was removed.
+  const t = tokens.dark;
   const grouped = groupByBrand(savedItems);
   const brandNames = Object.keys(grouped);
 
@@ -236,35 +238,6 @@ export default function SavedGallery() {
         transition: "background 0.2s ease",
       }}
     >
-
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 18,
-        }}
-      >
-        <span style={{ fontSize: 17, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "5px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-          }}
-        >
-          {theme === "dark" ? "Light" : "Dark"}
-        </button>
-      </div>
 
       <div style={{ width: "100%", maxWidth: 420 }}>
         <div style={{ marginBottom: 18 }}>

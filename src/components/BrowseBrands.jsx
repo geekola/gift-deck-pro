@@ -47,7 +47,6 @@ export default function BrowseBrands() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [theme, setTheme] = useState("dark");
   const [brands, setBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -100,7 +99,10 @@ export default function BrowseBrands() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const t = tokens[theme];
+  // Dark only, matching CustomerNav.jsx's top bar - see
+  // ProductCatalogue.jsx (brand side) for why the per-page theme toggle
+  // was removed.
+  const t = tokens.dark;
 
   const handleRequest = async (brand) => {
     setRequestingId(brand.id);
@@ -201,35 +203,6 @@ export default function BrowseBrands() {
         transition: "background 0.2s ease",
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 460,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 22,
-        }}
-      >
-        <span style={{ fontSize: 18, fontWeight: 700, color: t.textPrimary }}>Gift Deck Pro</span>
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          style={{
-            fontSize: 11,
-            fontWeight: 500,
-            color: t.textSecondary,
-            background: "transparent",
-            border: `1px solid ${t.border}`,
-            borderRadius: 6,
-            padding: "5px 10px",
-            cursor: "pointer",
-            fontFamily: "'Roboto', sans-serif",
-          }}
-        >
-          {theme === "dark" ? "Preview: Light" : "Preview: Dark"}
-        </button>
-      </div>
-
       <div style={{ width: "100%", maxWidth: 460 }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ width: 28, height: 3, background: tokens.gold, borderRadius: 2, marginBottom: 12 }} />
