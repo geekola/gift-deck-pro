@@ -116,7 +116,7 @@ export default function ReviewAndSubmit() {
   const [actionError, setActionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const loadReviewItems = async (uid) => {
+  const loadReviewItems = async (uid, onlyIds) => {
     const { data, error } = await supabase
       .from("saved_items")
       .select("id, products(*, brands(id, brand_name), product_variants(*))")
@@ -126,7 +126,9 @@ export default function ReviewAndSubmit() {
       setLoadError(error.message);
       return;
     }
-    setItems((data || []).map(mapReviewItem).filter(Boolean));
+    let mapped = (data || []).map(mapReviewItem).filter(Boolean);
+    if (onlyIds) mapped = mapped.filter((item) => onlyIds.has(item.id));
+    setItems(mapped);
   };
 
   useEffect(() => {
@@ -153,7 +155,18 @@ export default function ReviewAndSubmit() {
 
       setAddresses((addressResult.data || []).map(mapAddress));
       setContacts((contactResult.data || []).map(mapContact));
-      await loadReviewItems(user.id);
+
+      // SavedGallery.jsx's "Move to Review & Submit" passes the items the
+      // customer actually checked as ?items=id1,id2 - read directly off
+      // window.location (rather than next/navigation's useSearchParams)
+      // so this doesn't need a Suspense boundary, matching SwipeDeck's
+      // established pattern for the same tradeoff. No/empty param (e.g.
+      // a direct visit to this URL) falls back to reviewing everything
+      // saved, same as before this existed.
+      const itemsParam = new URLSearchParams(window.location.search).get("items");
+      const onlyIds = itemsParam ? new Set(itemsParam.split(",").filter(Boolean)) : null;
+
+      await loadReviewItems(user.id, onlyIds);
       setIsLoading(false);
     })();
   }, []);

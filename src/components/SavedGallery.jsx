@@ -145,14 +145,15 @@ export default function SavedGallery() {
     }
   };
 
-  // ReviewAndSubmit.jsx (/customer/review) is real now and loads every
-  // saved item for the customer itself - it doesn't take a selection.
-  // Gallery's per-item checkboxes are still useful as an "I'm ready for
-  // these" signal, but there's no way to hand a subset off to that
-  // screen without changing what it loads, so this just navigates and
-  // leaves selection as a visual affordance for now.
+  // ReviewAndSubmit.jsx (/customer/review) reads a comma-separated
+  // ?items= param and filters its saved_items load down to just those
+  // product ids - see the matching comment there. Falls back to
+  // reviewing everything saved if the param's ever missing, but Gallery
+  // only shows this button once something's selected, so that path is
+  // always populated here.
   const handleMoveToReview = () => {
-    router.push("/customer/review");
+    const params = new URLSearchParams({ items: selectedIds.join(",") });
+    router.push(`/customer/review?${params.toString()}`);
   };
 
   const selectedBrandsCount = new Set(
